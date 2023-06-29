@@ -5,7 +5,8 @@ use crate::{
 };
 use log::debug;
 use reqwest::Client;
-use std::{error::Error, io::prelude::*, path::Path};
+use reqwest_cookie_store::{CookieStore, CookieStoreMutex};
+use std::{error::Error, io::prelude::*, path::Path, sync::Arc};
 use url::Url;
 
 #[derive(Debug)]
@@ -13,15 +14,20 @@ pub struct QbitClient {
     pub host: Url,
     pub auth: types::AuthLoginForm,
     pub client: Client,
+    pub cookie_store: Arc<CookieStoreMutex>,
 }
 
 impl QbitClient {
     pub fn try_new(host: String, username: String, password: String) -> Result<Self, ClientError> {
-        let client = Client::builder().cookie_store(true).build()?;
+        let cookie_store = Arc::new(CookieStoreMutex::new(CookieStore::new(None)));
+        let client = Client::builder()
+            .cookie_provider(cookie_store.clone())
+            .build()?;
         Ok(Self {
             host: Url::parse(&host)?,
             auth: types::AuthLoginForm { username, password },
             client,
+            cookie_store,
         })
     }
 
@@ -69,6 +75,12 @@ impl QbitClient {
         let api_auth_login = api::AuthLogin {
             f: self.auth.clone(),
         };
+
+        {
+            let mut store = self.cookie_store.lock().unwrap();
+            store.clear();
+        }
+
         let s = self._resp(&api_auth_login).await?;
         Ok(s)
     }
