@@ -4,13 +4,57 @@
 
 A asynchronous Rust wrapper for qBittorrent [Web API](https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)) (For version above 4.1).
 
+## Usage
+
+add dependency
+
+```toml
+[dependencies]
+qbit-api-rs = "0.1"
+```
+
+or
+
+```sh
+cargo add qbit-api-rs
+```
+
+usage
+
+```rust
+use qbit_api_rs::client::QbitClient;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // initialize client with given username and password
+    let client = QbitClient::new_with_user_pwd("http://hostname:port", "admin", "adminadmin").unwrap();
+    // or from environment variable
+    // QBIT_HOST, QBIT_USERNAME, QBIT_PASSWORD must be set
+    let client = QbitClient::new_from_env().unwrap();
+
+    // login
+    client.auth_login().await?;
+
+    // call api methods
+    let v = client.app_version().await?;
+    println!("{}", v);
+
+    //...
+    Ok(())
+}
+```
+
+For more usage, please refer to [examples](https://github.com/Koro33/qbit-api-rs/tree/master/examples).
+
 ## Note
 
-- This crate provides only the pure API bindings. There is no such mechanism like reauthentication when the token expires. You should implement them by yourself.
+- This crate provides only pure API bindings. There is no such mechanism like reauthentication when the token expires.
 
-- The qBitTorrent uses cookie to authenticate. When call login method, the SID token will be updated, but will be expired after a while(default 3600 seconds). This expired time can be configured in the `Options -> WebUI -> Authentication -> Session timeout`. you can either periodically(within the timeout period) call the login method to reauthenticate. Or just enable `Bypass authentication for clients in whitelisted IP subnets` and configure your IP subnets, then you don't need to call login method to authenticate.
+- qBitTorrent uses cookie to authenticate. When calling login method, the SID token in cookie will be updated, but will be expired after a while(default 3600 seconds). This expired time can be configured in the `Options -> WebUI -> Authentication -> Session timeout`. To keep the SID token valid, you can either
+  - periodically(within the timeout period) call login method to reauthenticate.
+  - or just enable `Bypass authentication for clients in whitelisted IP subnets` and configure your IP subnets, then you don't need to call login method anymore.
 
-## Supported Method
+## Supported APIs
 
 ### Authentication
 
