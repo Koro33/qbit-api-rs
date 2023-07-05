@@ -2,6 +2,8 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum ClientError {
+    #[error("Initialize Error")]
+    Initialize(String),
     #[error("Token expired, Need Authentication")]
     NeedAuthentication,
     #[error("Authentication Failed")]

@@ -9,30 +9,56 @@ use reqwest_cookie_store::{CookieStore, CookieStoreMutex};
 use std::{error::Error, io::prelude::*, path::Path, sync::Arc};
 use url::Url;
 
+#[derive(Debug, Clone)]
+pub struct Credential {
+    pub username: String,
+    pub password: String,
+}
+
 #[derive(Debug)]
 pub struct QbitClient {
     pub host: Url,
-    pub auth: types::AuthLoginForm,
+    pub auth: Credential,
     pub client: Client,
     pub cookie_store: Arc<CookieStoreMutex>,
 }
 
 impl QbitClient {
-    pub fn try_new(host: String, username: String, password: String) -> Result<Self, ClientError> {
+    fn _try_new(host: String, username: String, password: String) -> Result<Self, ClientError> {
         let cookie_store = Arc::new(CookieStoreMutex::new(CookieStore::new(None)));
         let client = Client::builder()
             .cookie_provider(cookie_store.clone())
-            .build()?;
+            .build()
+            .map_err(|e| ClientError::Initialize(e.to_string()))?;
         Ok(Self {
-            host: Url::parse(&host)?,
-            auth: types::AuthLoginForm { username, password },
+            host: Url::parse(host.as_ref()).map_err(|e| ClientError::Initialize(e.to_string()))?,
+            auth: Credential { username, password },
             client,
             cookie_store,
         })
     }
+    pub fn new_with_user_pwd<U>(host: U, username: U, password: U) -> Result<Self, ClientError>
+    where
+        U: AsRef<str>,
+    {
+        Self::_try_new(
+            host.as_ref().to_string(),
+            username.as_ref().to_string(),
+            password.as_ref().to_string(),
+        )
+    }
 
-    pub fn new(host: String, username: String, password: String) -> Self {
-        Self::try_new(host, username, password).unwrap()
+    pub fn new_from_env() -> Result<Self, ClientError> {
+        use std::env::var;
+
+        let (host, username, password) = (
+            var("QBIT_HOST").map_err(|e| ClientError::Initialize(format!("`QBIT_HOST` {}", e)))?,
+            var("QBIT_USERNAME")
+                .map_err(|e| ClientError::Initialize(format!("`QBIT_USERNAME` {}", e)))?,
+            var("QBIT_PASSWORD")
+                .map_err(|e| ClientError::Initialize(format!("`QBIT_PASSWORD` {}", e)))?,
+        );
+        Self::_try_new(host, username, password)
     }
 
     pub async fn _resp<E>(&self, endpoint: &E) -> Result<E::Response, ClientError>
@@ -72,9 +98,11 @@ impl QbitClient {
     }
 
     pub async fn auth_login(&self) -> Result<String, ClientError> {
-        let api_auth_login = api::AuthLogin {
-            f: self.auth.clone(),
+        let auth_form = types::AuthLoginForm {
+            username: self.auth.username.clone(),
+            password: self.auth.password.clone(),
         };
+        let api_auth_login = api::AuthLogin { f: auth_form };
 
         {
             let mut store = self.cookie_store.lock().unwrap();
@@ -720,11 +748,8 @@ mod tests {
     async fn login() -> QbitClient {
         std::env::set_var("RUST_LOG", "debug");
         env_logger::init();
-        let qbit = QbitClient::new(
-            "http://192.168.0.11:8080".to_string(),
-            "admin".to_string(),
-            "adminadmin".to_string(),
-        );
+        let qbit = QbitClient::new_with_user_pwd("http://192.168.0.11:8080", "admin", "adminadmin")
+            .unwrap();
         qbit.auth_login().await.unwrap();
         qbit
     }

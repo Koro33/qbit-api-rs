@@ -1,5 +1,5 @@
 use anyhow::Result;
-use qbit_rs::client::QbitClient;
+use qbit_api_rs::client::QbitClient;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -7,12 +7,12 @@ async fn main() -> Result<()> {
     std::env::set_var("RUST_LOG", "info");
     env_logger::init();
 
-    // login info
-    let host = "http://192.168.0.11:8080".to_string();
-    let username = "admin".to_string();
-    let password = "adminadmin".to_string();
+    // initialize client with given username and password
+    let qbit =
+        QbitClient::new_with_user_pwd("http://192.168.0.11:8080", "admin", "adminadmin").unwrap();
 
-    let qbit = QbitClient::new(host, username, password);
+    // or from env(QBIT_HOST, QBIT_USERNAME, QBIT_PASSWORD)
+    // let qbit = QbitClient::new_from_env().unwrap();
 
     // login
     qbit.auth_login().await?;
