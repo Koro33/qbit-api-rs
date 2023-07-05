@@ -1,9 +1,9 @@
 [package]
-name = "qbit-rs"
+name = "qbit-api-rs"
 version = "0.1.0"
 edition = "2021"
 authors = ["Koro33 <koro33g@gmail.com>"]
-repository = "https://github.com/koro33/qbit-rs"
+repository = "https://github.com/koro33/qbit-api-rs"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 description = "A asynchronous Rust wrapper for qBittorrent Web API"

@@ -1,6 +1,6 @@
-# qbit-rs
+# qbit-api-rs
 
-[![GitHub release (release name instead of tag name)](https://img.shields.io/github/v/release/koro33/qbit-rs)](https://github.com/Koro33/qbit-rs/releases) [![Rust](https://img.shields.io/badge/Rust-stable-brightgreen)](https://www.rust-lang.org/) [![GitHub](https://img.shields.io/github/license/koro33/qbit-rs)](./LICENSE-APACHE) [![GitHub Repo stars](https://img.shields.io/github/stars/koro33/qbit-rs?style=social)](https://github.com/Koro33/qbit-rs)
+[![GitHub release (release name instead of tag name)](https://img.shields.io/github/v/release/koro33/qbit-api-rs)](https://github.com/Koro33/qbit-api-rs/releases) [![Rust](https://img.shields.io/badge/Rust-stable-brightgreen)](https://www.rust-lang.org/) [![GitHub](https://img.shields.io/github/license/koro33/qbit-api-rs)](./LICENSE-APACHE) [![GitHub Repo stars](https://img.shields.io/github/stars/koro33/qbit-api-rs?style=social)](https://github.com/Koro33/qbit-api-rs)
 
 A asynchronous Rust wrapper for qBittorrent [Web API](https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)) (For version above 4.1).
 
