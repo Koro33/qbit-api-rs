@@ -169,8 +169,32 @@ impl Endpoint for AppBuildInfo {
         Ok(res.json::<types::AppBuildInfoResponse>().await?)
     }
 }
+
 /// # `/api/v2/app/shutdown`
-// TODO: implement
+pub struct AppShutdown;
+
+#[async_trait]
+impl Endpoint for AppShutdown {
+    type Query = ();
+    type Form = ();
+    type Response = String;
+    fn relative_path(&self) -> Cow<str> {
+        "/api/v2/app/shutdown".into()
+    }
+    fn method(&self) -> reqwest::Method {
+        Method::POST
+    }
+    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
+        match status {
+            StatusCode::OK => None,
+            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
+            _ => Some(ClientError::Unknown),
+        }
+    }
+    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
+        Ok(res.text().await?)
+    }
+}
 
 /// # `/api/v2/app/preferences`
 pub struct AppPreferences;
@@ -2085,7 +2109,7 @@ impl Endpoint for TorrentsRenameFile {
     }
 }
 
-/// # `/api/v2/torrents/renameFolder
+/// # `/api/v2/torrents/renameFolder`
 pub struct TorrentsRenameFolder {
     pub f: types::TorrentsRenameFolderForm,
 }

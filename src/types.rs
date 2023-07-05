@@ -836,8 +836,8 @@ pub struct TorrentsFilesResponseItem {
 pub enum TorrentsFilesPriority {
     NotDownload = 0,
     Normal = 1,
-    High = 2,
-    Maximal = 3,
+    High = 6,
+    Maximal = 7,
 }
 
 /// # `/api/v2/torrents/pieceStates`
