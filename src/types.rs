@@ -1441,7 +1441,7 @@ pub struct SearchStartForm {
 #[derive(Debug, Deserialize)]
 #[serde(transparent)]
 pub struct SearchStartResponse {
-    pub id: HashMap<String, u64>,
+    pub job: HashMap<String, u64>,
 }
 
 /// # `/api/v2/search/stop`
