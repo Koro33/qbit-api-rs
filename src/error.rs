@@ -17,13 +17,11 @@ pub enum ClientError {
     #[error("Send Request Error")]
     ReqwestError(#[from] reqwest::Error),
     #[error("Torrents with hashes ({hash}) Not Found.")]
-    TorrentNotFound {
-        hash: String
-    },
+    TorrentNotFound { hash: String },
     #[error("Torrent File under {path} is invalid.")]
-    TorrentFileInvalid {
-        path: String
-    },
+    TorrentFileInvalid { path: String },
+    #[error("Search Job {id} Not Found.")]
+    SearchJobNotFound { id: u64 },
     #[error("Bad Request: {0}")]
     BadRequest(String),
     #[error("Conflict: {0}")]
@@ -39,4 +37,3 @@ pub enum TypesError {
     #[error("Error: {0}")]
     Other(String),
 }
-

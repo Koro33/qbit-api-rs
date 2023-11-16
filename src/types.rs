@@ -1429,6 +1429,82 @@ pub struct TorrentsRenameFolderForm {
     pub new_path: String,
 }
 
+/// # `api/v2/search/start`
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchStartForm {
+    pub pattern: String,
+    pub plugins: String,
+    pub category: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(transparent)]
+pub struct SearchStartResponse {
+    pub id: u64,
+}
+
+/// # `/api/v2/search/stop`
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchStopForm {
+    pub id: u64,
+}
+
+/// # `/api/v2/search/status`
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchStatusQuery {
+    pub id: Option<u64>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SearchStatusResponseItem {
+    pub id: u64,
+    pub status: String,
+    pub total: u64,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(transparent)]
+pub struct SearchStatusResponse {
+    pub jobs: Vec<SearchStatusResponseItem>,
+}
+
+/// # `/api/v2/search/results`
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchResultsQuery {
+    pub id: u64,
+    pub limit: u64,
+    pub offset: u64,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SearchResultResponseItem {
+    pub description_link: String,
+    pub file_name: String,
+    pub file_size: f64,
+    pub file_url: String,
+    pub leechers: u64,
+    pub seeders: u64,
+    pub site_url: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SearchResultsResponse {
+    pub results: Vec<SearchResultResponseItem>,
+    pub status: String,
+    pub total: u64,
+}
+
+/// # `/api/v2/search/delete`
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchDeleteForm {
+    pub id: u64,
+}
+
 /// ### NOTE:
 /// this custom serializer module is written to solve the problem,
 /// that the serde_urlencoded cannot deserialize the nested struct,
