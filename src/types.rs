@@ -1431,7 +1431,6 @@ pub struct TorrentsRenameFolderForm {
 
 /// # `api/v2/search/start`
 #[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct SearchStartForm {
     pub pattern: String,
     pub plugins: String,
@@ -1446,14 +1445,12 @@ pub struct SearchStartResponse {
 
 /// # `/api/v2/search/stop`
 #[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct SearchStopForm {
     pub id: u64,
 }
 
 /// # `/api/v2/search/status`
 #[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct SearchStatusQuery {
     pub id: Option<u64>,
 }
@@ -1473,7 +1470,6 @@ pub struct SearchStatusResponse {
 
 /// # `/api/v2/search/results`
 #[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct SearchResultsQuery {
     pub id: u64,
     pub limit: u64,
@@ -1501,7 +1497,6 @@ pub struct SearchResultsResponse {
 
 /// # `/api/v2/search/delete`
 #[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct SearchDeleteForm {
     pub id: u64,
 }
