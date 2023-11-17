@@ -1481,13 +1481,14 @@ pub struct SearchResultsQuery {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SearchResultResponseItem {
-    pub description_link: String,
+    pub descr_link: String,
     pub file_name: String,
     pub file_size: f64,
     pub file_url: String,
-    pub leechers: u64,
-    pub seeders: u64,
+    pub nb_leechers: u64,
+    pub nb_seeders: u64,
     pub site_url: String,
 }
 
