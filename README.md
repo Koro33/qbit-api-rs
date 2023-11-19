@@ -160,11 +160,11 @@ For more usage, please refer to [examples](https://github.com/Koro33/qbit-api-rs
 
 ### Search
 
-- [ ] Start search
-- [ ] Stop search
-- [ ] Get search status
-- [ ] Get search results
-- [ ] Delete search
+- [x] Start search
+- [x] Stop search
+- [x] Get search status
+- [x] Get search results
+- [x] Delete search
 - [ ] Get search plugins
 - [ ] Install search plugin
 - [ ] Uninstall search plugin
