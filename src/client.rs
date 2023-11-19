@@ -769,7 +769,7 @@ impl QbitClient {
         Ok(de_resp)
     }
 
-    pub async fn search_results(&self, id: u64, limit: u64, offset: u64) -> Result<types::SearchResultsResponse, ClientError> {
+    pub async fn search_results(&self, id: u64, limit: Option<u64>, offset: Option<i64>) -> Result<types::SearchResultsResponse, ClientError> {
         let q = types::SearchResultsQuery { id, limit, offset };
         let api_search_results = api::SearchResults { q };
         let de_resp = self._resp(&api_search_results).await.unwrap();

@@ -1472,8 +1472,8 @@ pub struct SearchStatusResponse {
 #[derive(Debug, Serialize)]
 pub struct SearchResultsQuery {
     pub id: u64,
-    pub limit: u64,
-    pub offset: u64,
+    pub limit: Option<u64>,
+    pub offset: Option<i64>,
 }
 
 #[derive(Debug, Deserialize)]
