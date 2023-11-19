@@ -738,6 +738,43 @@ impl QbitClient {
         let s = self._resp(&api_torrents_rename_folder).await.unwrap();
         Ok(s)
     }
+
+    pub async fn search_start(
+        &self,
+        pattern: String,
+        plugins: String,
+        category: String,
+    ) -> Result<types::SearchStartResponse, ClientError> {
+        let f = types::SearchStartForm {
+            pattern,
+            plugins,
+            category,
+        };
+        let api_search_start = api::SearchStart { f };
+        let de_resp = self._resp(&api_search_start).await.unwrap();
+        Ok(de_resp)
+    }
+
+    pub async fn search_stop(&self, id: u64) -> Result<String, ClientError> {
+        let f = types::SearchStopForm { id };
+        let api_search_stop = api::SearchStop { f };
+        let s = self._resp(&api_search_stop).await.unwrap();
+        Ok(s)
+    }
+
+    pub async fn search_status(&self, id: Option<u64>) -> Result<types::SearchStatusResponse, ClientError> {
+        let q = types::SearchStatusQuery { id };
+        let api_search_status = api::SearchStatus { q };
+        let de_resp = self._resp(&api_search_status).await.unwrap();
+        Ok(de_resp)
+    }
+
+    pub async fn search_results(&self, id: u64, limit: Option<i64>, offset: Option<i64>) -> Result<types::SearchResultsResponse, ClientError> {
+        let q = types::SearchResultsQuery { id, limit, offset };
+        let api_search_results = api::SearchResults { q };
+        let de_resp = self._resp(&api_search_results).await.unwrap();
+        Ok(de_resp)
+    }
 }
 
 #[cfg(test)]
