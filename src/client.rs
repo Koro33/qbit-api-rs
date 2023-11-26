@@ -326,6 +326,34 @@ impl QbitClient {
         Ok(s)
     }
 
+    pub async fn torrents_resume(&self, hashes: Vec<String>) -> Result<String, ClientError> {
+        let f = types::TorrentsResumeForm { hashes };
+        let api_torrents_resume = api::TorrentsResume { f };
+        let s = self._resp(&api_torrents_resume).await?;
+        Ok(s)
+    }
+
+    pub async fn torrents_delete(&self, hashes: Vec<String>, delete_files: bool) -> Result<String, ClientError> {
+        let f = types::TorrentsDeleteForm { hashes, delete_files };
+        let api_torrents_delete = api::TorrentsDelete { f };
+        let s = self._resp(&api_torrents_delete).await?;
+        Ok(s)
+    }
+
+    pub async fn torrents_recheck(&self, hashes: Vec<String>) -> Result<String, ClientError> {
+        let f = types::TorrentsRecheckForm { hashes };
+        let api_torrents_recheck = api::TorrentsRecheck { f };
+        let s = self._resp(&api_torrents_recheck).await?;
+        Ok(s)
+    }
+
+    pub async fn torrents_reannounce(&self, hashes: Vec<String>) -> Result<String, ClientError> {
+        let f = types::TorrentsReannounceForm { hashes };
+        let api_torrents_reannounce = api::TorrentsReannounce { f };
+        let s = self._resp(&api_torrents_reannounce).await?;
+        Ok(s)
+    }
+
     pub async fn torrents_add_by_url<U>(&self, urls: &[U]) -> Result<String, ClientError>
     where
         U: AsRef<str>,
