@@ -24,15 +24,18 @@ pub struct QbitClient {
 }
 
 impl QbitClient {
-    fn _try_new(host: String, username: String, password: String) -> Result<Self, ClientError> {
+    fn _try_new(host: &str, username: &str, password: &str) -> Result<Self, ClientError> {
         let cookie_store = Arc::new(CookieStoreMutex::new(CookieStore::new(None)));
         let client = Client::builder()
             .cookie_provider(cookie_store.clone())
             .build()
             .map_err(|e| ClientError::Initialize(e.to_string()))?;
         Ok(Self {
-            host: Url::parse(host.as_ref()).map_err(|e| ClientError::Initialize(e.to_string()))?,
-            auth: Credential { username, password },
+            host: Url::parse(host).map_err(|e| ClientError::Initialize(e.to_string()))?,
+            auth: Credential {
+                username: username.to_owned(),
+                password: password.to_owned(),
+            },
             client,
             cookie_store,
         })
@@ -41,24 +44,19 @@ impl QbitClient {
     where
         U: AsRef<str>,
     {
-        Self::_try_new(
-            host.as_ref().to_string(),
-            username.as_ref().to_string(),
-            password.as_ref().to_string(),
-        )
+        Self::_try_new(host.as_ref(), username.as_ref(), password.as_ref())
     }
 
     pub fn new_from_env() -> Result<Self, ClientError> {
         use std::env::var;
 
-        let (host, username, password) = (
-            var("QBIT_HOST").map_err(|e| ClientError::Initialize(format!("`QBIT_HOST` {}", e)))?,
-            var("QBIT_USERNAME")
-                .map_err(|e| ClientError::Initialize(format!("`QBIT_USERNAME` {}", e)))?,
-            var("QBIT_PASSWORD")
-                .map_err(|e| ClientError::Initialize(format!("`QBIT_PASSWORD` {}", e)))?,
-        );
-        Self::_try_new(host, username, password)
+        let host =
+            var("QBIT_HOST").map_err(|e| ClientError::Initialize(format!("`QBIT_HOST` {}", e)))?;
+        let username = var("QBIT_USERNAME")
+            .map_err(|e| ClientError::Initialize(format!("`QBIT_USERNAME` {}", e)))?;
+        let password = var("QBIT_PASSWORD")
+            .map_err(|e| ClientError::Initialize(format!("`QBIT_PASSWORD` {}", e)))?;
+        Self::_try_new(&host, &username, &password)
     }
 
     pub async fn _resp<E>(&self, endpoint: &E) -> Result<E::Response, ClientError>
@@ -240,8 +238,10 @@ impl QbitClient {
         Ok(s)
     }
 
-    pub async fn ban_peers(&self, peers: Vec<String>) -> Result<String, ClientError> {
-        let f = types::BanPeersForm { peers };
+    pub async fn ban_peers(&self, peers: &[String]) -> Result<String, ClientError> {
+        let f = types::BanPeersForm {
+            peers: peers.to_owned(),
+        };
         let api_ban_peers = api::BanPeers { f };
         let s = self._resp(&api_ban_peers).await?;
         Ok(s)
@@ -258,9 +258,11 @@ impl QbitClient {
 
     pub async fn torrents_properties(
         &self,
-        hash: String,
+        hash: &str,
     ) -> Result<types::TorrentsPropertiesResponse, ClientError> {
-        let q = types::TorrentsPropertiesQuery { hash };
+        let q = types::TorrentsPropertiesQuery {
+            hash: hash.to_owned(),
+        };
         let api_torrents_properties = api::TorrentsProperties { q };
         let de_resp = self._resp(&api_torrents_properties).await?;
         Ok(de_resp)
@@ -268,9 +270,11 @@ impl QbitClient {
 
     pub async fn torrents_trackers(
         &self,
-        hash: String,
+        hash: &str,
     ) -> Result<types::TorrentsTrackersResponse, ClientError> {
-        let q = types::TorrentsTrackersQuery { hash };
+        let q = types::TorrentsTrackersQuery {
+            hash: hash.to_owned(),
+        };
         let api_torrents_trackers = api::TorrentsTrackers { q };
         let de_resp = self._resp(&api_torrents_trackers).await?;
         Ok(de_resp)
@@ -278,9 +282,11 @@ impl QbitClient {
 
     pub async fn torrents_webseeds(
         &self,
-        hash: String,
+        hash: &str,
     ) -> Result<types::TorrentsWebseedsResponse, ClientError> {
-        let q = types::TorrentsWebseedsQuery { hash };
+        let q = types::TorrentsWebseedsQuery {
+            hash: hash.to_owned(),
+        };
         let api_torrents_webseeds = api::TorrentsWebseeds { q };
         let de_resp = self._resp(&api_torrents_webseeds).await?;
         Ok(de_resp)
@@ -288,10 +294,10 @@ impl QbitClient {
 
     pub async fn torrents_files(
         &self,
-        hash: String,
+        hash: &str,
     ) -> Result<types::TorrentsFilesResponse, ClientError> {
         let q = types::TorrentsFilesQuery {
-            hash,
+            hash: hash.to_owned(),
             ..Default::default()
         };
         let api_torrents_files = api::TorrentsFiles { q };
@@ -301,9 +307,11 @@ impl QbitClient {
 
     pub async fn torrents_piece_states(
         &self,
-        hash: String,
+        hash: &str,
     ) -> Result<types::TorrentsPieceStatesResponse, ClientError> {
-        let q = types::TorrentsPieceStatesQuery { hash };
+        let q = types::TorrentsPieceStatesQuery {
+            hash: hash.to_owned(),
+        };
         let api_torrents_piece_states = api::TorrentsPieceStates { q };
         let de_resp = self._resp(&api_torrents_piece_states).await?;
         Ok(de_resp)
@@ -311,44 +319,61 @@ impl QbitClient {
 
     pub async fn torrents_piece_hashes(
         &self,
-        hash: String,
+        hash: &str,
     ) -> Result<types::TorrentsPieceHashesResponse, ClientError> {
-        let q = types::TorrentsPieceHashesQuery { hash };
+        let q = types::TorrentsPieceHashesQuery {
+            hash: hash.to_owned(),
+        };
         let api_torrents_piece_hashes = api::TorrentsPieceHashes { q };
         let de_resp = self._resp(&api_torrents_piece_hashes).await?;
         Ok(de_resp)
     }
 
-    pub async fn torrents_pause(&self, hashes: Vec<String>) -> Result<String, ClientError> {
-        let f = types::TorrentsPauseForm { hashes };
+    pub async fn torrents_pause(&self, hashes: &[String]) -> Result<String, ClientError> {
+        let f = types::TorrentsPauseForm {
+            hashes: hashes.to_owned(),
+        };
         let api_torrents_pause = api::TorrentsPause { f };
         let s = self._resp(&api_torrents_pause).await?;
         Ok(s)
     }
 
-    pub async fn torrents_resume(&self, hashes: Vec<String>) -> Result<String, ClientError> {
-        let f = types::TorrentsResumeForm { hashes };
+    pub async fn torrents_resume(&self, hashes: &[String]) -> Result<String, ClientError> {
+        let f = types::TorrentsResumeForm {
+            hashes: hashes.to_owned(),
+        };
         let api_torrents_resume = api::TorrentsResume { f };
         let s = self._resp(&api_torrents_resume).await?;
         Ok(s)
     }
 
-    pub async fn torrents_delete(&self, hashes: Vec<String>, delete_files: bool) -> Result<String, ClientError> {
-        let f = types::TorrentsDeleteForm { hashes, delete_files };
+    pub async fn torrents_delete(
+        &self,
+        hashes: &[String],
+        delete_files: bool,
+    ) -> Result<String, ClientError> {
+        let f = types::TorrentsDeleteForm {
+            hashes: hashes.to_owned(),
+            delete_files,
+        };
         let api_torrents_delete = api::TorrentsDelete { f };
         let s = self._resp(&api_torrents_delete).await?;
         Ok(s)
     }
 
-    pub async fn torrents_recheck(&self, hashes: Vec<String>) -> Result<String, ClientError> {
-        let f = types::TorrentsRecheckForm { hashes };
+    pub async fn torrents_recheck(&self, hashes: &[String]) -> Result<String, ClientError> {
+        let f = types::TorrentsRecheckForm {
+            hashes: hashes.to_owned(),
+        };
         let api_torrents_recheck = api::TorrentsRecheck { f };
         let s = self._resp(&api_torrents_recheck).await?;
         Ok(s)
     }
 
-    pub async fn torrents_reannounce(&self, hashes: Vec<String>) -> Result<String, ClientError> {
-        let f = types::TorrentsReannounceForm { hashes };
+    pub async fn torrents_reannounce(&self, hashes: &[String]) -> Result<String, ClientError> {
+        let f = types::TorrentsReannounceForm {
+            hashes: hashes.to_owned(),
+        };
         let api_torrents_reannounce = api::TorrentsReannounce { f };
         let s = self._resp(&api_torrents_reannounce).await?;
         Ok(s)
@@ -358,7 +383,7 @@ impl QbitClient {
     where
         U: AsRef<str>,
     {
-        let urls: Vec<String> = urls.iter().map(|u| u.as_ref().to_string()).collect();
+        let urls: Vec<String> = urls.iter().map(|u| u.as_ref().to_owned()).collect();
         let ta = types::TorrentsAddMultipart {
             urls,
             torrents: vec![],
@@ -408,10 +433,13 @@ impl QbitClient {
 
     pub async fn torrents_add_trackers(
         &self,
-        hash: String,
-        urls: Vec<String>,
+        hash: &str,
+        urls: &[String],
     ) -> Result<String, ClientError> {
-        let f = types::TorrentsAddTrackersForm { hash, urls };
+        let f = types::TorrentsAddTrackersForm {
+            hash: hash.to_owned(),
+            urls: urls.to_owned(),
+        };
         let api_torrents_add_trackers = api::TorrentsAddTrackers { f };
         let s = self._resp(&api_torrents_add_trackers).await?;
         Ok(s)
@@ -419,14 +447,14 @@ impl QbitClient {
 
     pub async fn torrents_edit_tracker(
         &self,
-        hash: String,
-        orig_url: String,
-        new_url: String,
+        hash: &str,
+        orig_url: &str,
+        new_url: &str,
     ) -> Result<String, ClientError> {
         let f = types::TorrentsEditTrackerForm {
-            hash,
-            orig_url,
-            new_url,
+            hash: hash.to_owned(),
+            orig_url: orig_url.to_owned(),
+            new_url: new_url.to_owned(),
         };
         let api_torrents_edit_tracker = api::TorrentsEditTracker { f };
         let s = self._resp(&api_torrents_edit_tracker).await?;
@@ -435,10 +463,13 @@ impl QbitClient {
 
     pub async fn torrents_remove_trackers(
         &self,
-        hash: String,
-        urls: Vec<String>,
+        hash: &str,
+        urls: &[String],
     ) -> Result<String, ClientError> {
-        let f = types::TorrentsRemoveTrackersForm { hash, urls };
+        let f = types::TorrentsRemoveTrackersForm {
+            hash: hash.to_owned(),
+            urls: urls.to_owned(),
+        };
         let api_torrents_remove_trackers = api::TorrentsRemoveTrackers { f };
         let s = self._resp(&api_torrents_remove_trackers).await?;
         Ok(s)
@@ -446,38 +477,49 @@ impl QbitClient {
 
     pub async fn torrents_add_peers(
         &self,
-        hashes: Vec<String>,
-        peers: Vec<String>,
+        hashes: &[String],
+        peers: &[String],
     ) -> Result<String, ClientError> {
-        let f = types::TorrentsAddPeersForm { hashes, peers };
+        let f = types::TorrentsAddPeersForm {
+            hashes: hashes.to_owned(),
+            peers: peers.to_owned(),
+        };
         let api_torrents_add_peers = api::TorrentsAddPeers { f };
         let s = self._resp(&api_torrents_add_peers).await.unwrap();
         Ok(s)
     }
 
-    pub async fn torrents_increase_prio(&self, hashes: Vec<String>) -> Result<String, ClientError> {
-        let f = types::TorrentsIncreasePrioForm { hashes };
+    pub async fn torrents_increase_prio(&self, hashes: &[String]) -> Result<String, ClientError> {
+        let f = types::TorrentsIncreasePrioForm {
+            hashes: hashes.to_owned(),
+        };
         let api_torrents_increase_prio = api::TorrentsIncreasePrio { f };
         let s = self._resp(&api_torrents_increase_prio).await.unwrap();
         Ok(s)
     }
 
-    pub async fn torrents_decrease_prio(&self, hashes: Vec<String>) -> Result<String, ClientError> {
-        let f = types::TorrentsDecreasePrioForm { hashes };
+    pub async fn torrents_decrease_prio(&self, hashes: &[String]) -> Result<String, ClientError> {
+        let f = types::TorrentsDecreasePrioForm {
+            hashes: hashes.to_owned(),
+        };
         let api_torrents_decrease_prio = api::TorrentsDecreasePrio { f };
         let s = self._resp(&api_torrents_decrease_prio).await.unwrap();
         Ok(s)
     }
 
-    pub async fn torrents_top_prio(&self, hashes: Vec<String>) -> Result<String, ClientError> {
-        let f = types::TorrentsTopPrioForm { hashes };
+    pub async fn torrents_top_prio(&self, hashes: &[String]) -> Result<String, ClientError> {
+        let f = types::TorrentsTopPrioForm {
+            hashes: hashes.to_owned(),
+        };
         let api_torrents_top_prio = api::TorrentsTopPrio { f };
         let s = self._resp(&api_torrents_top_prio).await.unwrap();
         Ok(s)
     }
 
-    pub async fn torrents_bottom_prio(&self, hashes: Vec<String>) -> Result<String, ClientError> {
-        let f = types::TorrentsBottomPrioForm { hashes };
+    pub async fn torrents_bottom_prio(&self, hashes: &[String]) -> Result<String, ClientError> {
+        let f = types::TorrentsBottomPrioForm {
+            hashes: hashes.to_owned(),
+        };
         let api_torrents_bottom_prio = api::TorrentsBottomPrio { f };
         let s = self._resp(&api_torrents_bottom_prio).await.unwrap();
         Ok(s)
@@ -485,9 +527,11 @@ impl QbitClient {
 
     pub async fn torrents_download_limit(
         &self,
-        hashes: Vec<String>,
+        hashes: &[String],
     ) -> Result<types::TorrentsDownloadLimitResponse, ClientError> {
-        let f = types::TorrentsDownloadLimitForm { hashes };
+        let f = types::TorrentsDownloadLimitForm {
+            hashes: hashes.to_owned(),
+        };
         let api_torrents_download_limit = api::TorrentsDownloadLimit { f };
         let de_resp = self._resp(&api_torrents_download_limit).await.unwrap();
         Ok(de_resp)
@@ -495,10 +539,13 @@ impl QbitClient {
 
     pub async fn torrents_set_download_limit(
         &self,
-        hashes: Vec<String>,
+        hashes: &[String],
         limit: u64,
     ) -> Result<String, ClientError> {
-        let f = types::TorrentsSetDownloadLimitForm { hashes, limit };
+        let f = types::TorrentsSetDownloadLimitForm {
+            hashes: hashes.to_owned(),
+            limit,
+        };
         let api_torrents_set_download_limit = api::TorrentsSetDownloadLimit { f };
         let s = self._resp(&api_torrents_set_download_limit).await.unwrap();
         Ok(s)
@@ -506,12 +553,12 @@ impl QbitClient {
 
     pub async fn torrents_set_share_limits(
         &self,
-        hashes: Vec<String>,
+        hashes: &[String],
         ratio_limit: types::RatioLimit,
         seeding_time_limit: i64,
     ) -> Result<String, ClientError> {
         let f = types::TorrentsSetShareLimitsForm {
-            hashes,
+            hashes: hashes.to_owned(),
             ratio_limit,
             seeding_time_limit,
         };
@@ -522,9 +569,11 @@ impl QbitClient {
 
     pub async fn torrents_upload_limit(
         &self,
-        hashes: Vec<String>,
+        hashes: &[String],
     ) -> Result<types::TorrentsUploadLimitResponse, ClientError> {
-        let f = types::TorrentsUploadLimitForm { hashes };
+        let f = types::TorrentsUploadLimitForm {
+            hashes: hashes.to_owned(),
+        };
         let api_torrents_upload_limit = api::TorrentsUploadLimit { f };
         let de_resp = self._resp(&api_torrents_upload_limit).await.unwrap();
         Ok(de_resp)
@@ -532,10 +581,13 @@ impl QbitClient {
 
     pub async fn torrents_set_upload_limit(
         &self,
-        hashes: Vec<String>,
+        hashes: &[String],
         limit: u64,
     ) -> Result<String, ClientError> {
-        let f = types::TorrentsSetUploadLimitForm { hashes, limit };
+        let f = types::TorrentsSetUploadLimitForm {
+            hashes: hashes.to_owned(),
+            limit,
+        };
         let api_torrents_set_upload_limit = api::TorrentsSetUploadLimit { f };
         let s = self._resp(&api_torrents_set_upload_limit).await.unwrap();
         Ok(s)
@@ -543,14 +595,14 @@ impl QbitClient {
 
     pub async fn torrents_set_location<T>(
         &self,
-        hashes: Vec<String>,
+        hashes: &[String],
         location: T,
     ) -> Result<String, ClientError>
     where
         T: AsRef<Path>,
     {
         let f = types::TorrentsSetLocationForm {
-            hashes,
+            hashes: hashes.to_owned(),
             location: location.as_ref().to_string_lossy().to_string(),
         };
         let api_torrents_set_location = api::TorrentsSetLocation { f };
@@ -567,10 +619,13 @@ impl QbitClient {
 
     pub async fn torernts_set_category(
         &self,
-        hashes: Vec<String>,
-        category: String,
+        hashes: &[String],
+        category: &str,
     ) -> Result<String, ClientError> {
-        let f = types::TorrentsSetCategoryForm { hashes, category };
+        let f = types::TorrentsSetCategoryForm {
+            hashes: hashes.to_owned(),
+            category: category.to_owned(),
+        };
         let api_torrents_set_category = api::TorrentsSetCategory { f };
         let s = self._resp(&api_torrents_set_category).await.unwrap();
         Ok(s)
@@ -586,14 +641,14 @@ impl QbitClient {
 
     pub async fn torrents_create_category<T>(
         &self,
-        category: String,
+        category: &str,
         save_path: T,
     ) -> Result<String, ClientError>
     where
         T: AsRef<Path>,
     {
         let f = types::TorrentsCreateCategoryForm {
-            category,
+            category: category.to_owned(),
             save_path: save_path.as_ref().to_string_lossy().to_string(),
         };
         let api_torrents_create_category = api::TorrentsCreateCategory { f };
@@ -603,14 +658,14 @@ impl QbitClient {
 
     pub async fn torrents_edit_category<T>(
         &self,
-        category: String,
+        category: &str,
         save_path: T,
     ) -> Result<String, ClientError>
     where
         T: AsRef<Path>,
     {
         let f = types::TorrentsEditCategoryForm {
-            category,
+            category: category.to_owned(),
             save_path: save_path.as_ref().to_string_lossy().to_string(),
         };
         let api_torrents_edit_category = api::TorrentsEditCategory { f };
@@ -620,9 +675,11 @@ impl QbitClient {
 
     pub async fn torrents_remove_categories(
         &self,
-        categories: Vec<String>,
+        categories: &[String],
     ) -> Result<String, ClientError> {
-        let f = types::TorrentsRemoveCategoriesForm { categories };
+        let f = types::TorrentsRemoveCategoriesForm {
+            categories: categories.to_owned(),
+        };
         let api_torrents_remove_categories = api::TorrentsRemoveCategories { f };
         let s = self._resp(&api_torrents_remove_categories).await.unwrap();
         Ok(s)
@@ -630,10 +687,13 @@ impl QbitClient {
 
     pub async fn torrents_add_tags(
         &self,
-        hashes: Vec<String>,
-        tags: Vec<String>,
+        hashes: &[String],
+        tags: &[String],
     ) -> Result<String, ClientError> {
-        let f = types::TorrentsAddTagsForm { hashes, tags };
+        let f = types::TorrentsAddTagsForm {
+            hashes: hashes.to_owned(),
+            tags: tags.to_owned(),
+        };
         let api_torrents_add_tags = api::TorrentsAddTags { f };
         let s = self._resp(&api_torrents_add_tags).await.unwrap();
         Ok(s)
@@ -641,10 +701,13 @@ impl QbitClient {
 
     pub async fn torrents_remove_tags(
         &self,
-        hashes: Vec<String>,
-        tags: Vec<String>,
+        hashes: &[String],
+        tags: &[String],
     ) -> Result<String, ClientError> {
-        let f = types::TorrentsRemoveTagsForm { hashes, tags };
+        let f = types::TorrentsRemoveTagsForm {
+            hashes: hashes.to_owned(),
+            tags: tags.to_owned(),
+        };
         let api_torrents_remove_tags = api::TorrentsRemoveTags { f };
         let s = self._resp(&api_torrents_remove_tags).await.unwrap();
         Ok(s)
@@ -656,15 +719,19 @@ impl QbitClient {
         Ok(de_resp)
     }
 
-    pub async fn torrens_create_tags(&self, tags: Vec<String>) -> Result<String, ClientError> {
-        let f = types::TorrentsCreateTagsForm { tags };
+    pub async fn torrens_create_tags(&self, tags: &[String]) -> Result<String, ClientError> {
+        let f = types::TorrentsCreateTagsForm {
+            tags: tags.to_owned(),
+        };
         let api_torrents_create_tags = api::TorrentsCreateTags { f };
         let s = self._resp(&api_torrents_create_tags).await.unwrap();
         Ok(s)
     }
 
-    pub async fn torrents_delete_tags(&self, tags: Vec<String>) -> Result<String, ClientError> {
-        let f = types::TorrentsDeleteTagsForm { tags };
+    pub async fn torrents_delete_tags(&self, tags: &[String]) -> Result<String, ClientError> {
+        let f = types::TorrentsDeleteTagsForm {
+            tags: tags.to_owned(),
+        };
         let api_torrents_delete_tags = api::TorrentsDeleteTags { f };
         let s = self._resp(&api_torrents_delete_tags).await.unwrap();
         Ok(s)
@@ -672,10 +739,13 @@ impl QbitClient {
 
     pub async fn torrents_set_auto_management(
         &self,
-        hashes: Vec<String>,
+        hashes: &[String],
         enable: bool,
     ) -> Result<String, ClientError> {
-        let f = types::TorrentsSetAutoManagementForm { hashes, enable };
+        let f = types::TorrentsSetAutoManagementForm {
+            hashes: hashes.to_owned(),
+            enable,
+        };
         let api_torrents_set_automanagement = api::TorrentsSetAutoManagement { f };
         let s = self._resp(&api_torrents_set_automanagement).await.unwrap();
         Ok(s)
@@ -683,9 +753,11 @@ impl QbitClient {
 
     pub async fn torrents_toggle_sequential_download(
         &self,
-        hashes: Vec<String>,
+        hashes: &[String],
     ) -> Result<String, ClientError> {
-        let f = types::TorrentsToggleSequentialDownloadForm { hashes };
+        let f = types::TorrentsToggleSequentialDownloadForm {
+            hashes: hashes.to_owned(),
+        };
         let api_torrents_toggle_sequential_download = api::TorrentsToggleSequentialDownload { f };
         let s = self
             ._resp(&api_torrents_toggle_sequential_download)
@@ -696,9 +768,11 @@ impl QbitClient {
 
     pub async fn torrents_toggle_first_last_piece_prio(
         &self,
-        hashes: Vec<String>,
+        hashes: &[String],
     ) -> Result<String, ClientError> {
-        let f = types::TorrentsToggleFirstLastPiecePrioForm { hashes };
+        let f = types::TorrentsToggleFirstLastPiecePrioForm {
+            hashes: hashes.to_owned(),
+        };
         let api_torrents_toggle_first_last_piece_prio = api::TorrentsToggleFirstLastPiecePrio { f };
         let s = self
             ._resp(&api_torrents_toggle_first_last_piece_prio)
@@ -709,10 +783,13 @@ impl QbitClient {
 
     pub async fn torrents_set_force_start(
         &self,
-        hashes: Vec<String>,
+        hashes: &[String],
         value: bool,
     ) -> Result<String, ClientError> {
-        let f = types::TorrentsSetForceStartForm { hashes, value };
+        let f = types::TorrentsSetForceStartForm {
+            hashes: hashes.to_owned(),
+            value,
+        };
         let api_torrents_set_force_start = api::TorrentsSetForceStart { f };
         let s = self._resp(&api_torrents_set_force_start).await.unwrap();
         Ok(s)
@@ -720,10 +797,13 @@ impl QbitClient {
 
     pub async fn torrents_set_super_seeding(
         &self,
-        hashes: Vec<String>,
+        hashes: &[String],
         value: bool,
     ) -> Result<String, ClientError> {
-        let f = types::TorrentsSetSuperSeedingForm { hashes, value };
+        let f = types::TorrentsSetSuperSeedingForm {
+            hashes: hashes.to_owned(),
+            value,
+        };
         let api_torrents_set_super_seeding = api::TorrentsSetSuperSeeding { f };
         let s = self._resp(&api_torrents_set_super_seeding).await.unwrap();
         Ok(s)
@@ -731,7 +811,7 @@ impl QbitClient {
 
     pub async fn torrents_rename_file<T>(
         &self,
-        hash: String,
+        hash: &str,
         old_path: T,
         new_path: T,
     ) -> Result<String, ClientError>
@@ -739,7 +819,7 @@ impl QbitClient {
         T: AsRef<Path>,
     {
         let f = types::TorrentsRenameFileForm {
-            hash,
+            hash: hash.to_owned(),
             old_path: old_path.as_ref().to_string_lossy().to_string(),
             new_path: new_path.as_ref().to_string_lossy().to_string(),
         };
@@ -750,7 +830,7 @@ impl QbitClient {
 
     pub async fn torrents_rename_folder<T>(
         &self,
-        hash: String,
+        hash: &str,
         old_path: T,
         new_path: T,
     ) -> Result<String, ClientError>
@@ -758,7 +838,7 @@ impl QbitClient {
         T: AsRef<Path>,
     {
         let f = types::TorrentsRenameFolderForm {
-            hash,
+            hash: hash.to_owned(),
             old_path: old_path.as_ref().to_string_lossy().to_string(),
             new_path: new_path.as_ref().to_string_lossy().to_string(),
         };
@@ -769,14 +849,14 @@ impl QbitClient {
 
     pub async fn search_start(
         &self,
-        pattern: String,
-        plugins: String,
-        category: String,
+        pattern: &str,
+        plugins: &str,
+        category: &str,
     ) -> Result<types::SearchStartResponse, ClientError> {
         let f = types::SearchStartForm {
-            pattern,
-            plugins,
-            category,
+            pattern: pattern.to_owned(),
+            plugins: plugins.to_owned(),
+            category: category.to_owned(),
         };
         let api_search_start = api::SearchStart { f };
         let de_resp = self._resp(&api_search_start).await.unwrap();
@@ -790,14 +870,22 @@ impl QbitClient {
         Ok(s)
     }
 
-    pub async fn search_status(&self, id: Option<u64>) -> Result<types::SearchStatusResponse, ClientError> {
+    pub async fn search_status(
+        &self,
+        id: Option<u64>,
+    ) -> Result<types::SearchStatusResponse, ClientError> {
         let q = types::SearchStatusQuery { id };
         let api_search_status = api::SearchStatus { q };
         let de_resp = self._resp(&api_search_status).await.unwrap();
         Ok(de_resp)
     }
 
-    pub async fn search_results(&self, id: u64, limit: Option<i64>, offset: Option<i64>) -> Result<types::SearchResultsResponse, ClientError> {
+    pub async fn search_results(
+        &self,
+        id: u64,
+        limit: Option<i64>,
+        offset: Option<i64>,
+    ) -> Result<types::SearchResultsResponse, ClientError> {
         let q = types::SearchResultsQuery { id, limit, offset };
         let api_search_results = api::SearchResults { q };
         let de_resp = self._resp(&api_search_results).await.unwrap();
