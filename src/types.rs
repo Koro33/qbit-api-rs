@@ -575,13 +575,13 @@ pub struct TorrentsInfoQuery {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tag: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub sort: Option<String>,
+    pub sort: Option<TorrentsInfoSort>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reverse: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub limit: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub offset: Option<u64>,
+    pub offset: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hashes: Option<Hashes>,
 }
@@ -603,6 +603,54 @@ pub enum TorrentsInfoFilter {
     StalledUploading,
     StalledDownloading,
     Errored,
+}
+
+/// # `/api/v2/torrents/info`
+/// [`TorrentsInfoQuery::sort`]
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum TorrentsInfoSort {
+    AddedOn,
+    AmountLeft,
+    AutoTmm,
+    Category,
+    Completed,
+    CompletionOn,
+    DlLimit,
+    Dlspeed,
+    Downloaded,
+    DownloadedSession,
+    Eta,
+    FLPiecePrio,
+    ForceStart,
+    Hash,
+    LastActivity,
+    MagnetUri,
+    MaxRatio,
+    MaxSeedingTime,
+    Name,
+    NumComplete,
+    NumIncomplete,
+    NumLeechs,
+    NumSeeds,
+    Priority,
+    Progress,
+    Ratio,
+    SavePath,
+    SeedingTimeLimit,
+    SeenComplete,
+    SeqDl,
+    Size,
+    State,
+    SuperSeeding,
+    Tags,
+    TimeActive,
+    TotalSize,
+    Tracker,
+    UpLimit,
+    Uploaded,
+    UploadedSession,
+    Upspeed,
 }
 
 /// # `/api/v2/torrents/info`
