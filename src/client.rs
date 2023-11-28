@@ -171,7 +171,7 @@ impl QbitClient {
         let api_logmain = api::LogMain { q: q.to_owned() };
         let de_resp = self._resp(&api_logmain).await?;
 
-        Ok(de_resp.data)
+        Ok(de_resp)
     }
 
     pub async fn log_peers(
@@ -181,7 +181,7 @@ impl QbitClient {
         let api_logpeers = api::LogPeers { q: q.to_owned() };
         let de_resp = self._resp(&api_logpeers).await?;
 
-        Ok(de_resp.data)
+        Ok(de_resp)
     }
 
     pub async fn sync_maindata(

@@ -46,7 +46,7 @@ async fn main() -> Result<()> {
         // ...
         ..Default::default()
     };
-    for torrent in qb_cli.torrents_info(&q).await?.data {
+    for torrent in qb_cli.torrents_info(&q).await? {
         log::info!(
             "{:?} - {:?} - {:?}",
             torrent.state,

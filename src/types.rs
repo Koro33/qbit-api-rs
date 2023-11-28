@@ -1,7 +1,7 @@
 use crate::error::TypesError;
 use serde::{self, Deserialize, Serialize};
 use serde_repr::*;
-use std::{collections::HashMap, default};
+use std::collections::HashMap;
 
 /// # `/api/v2/auth/login`
 #[derive(Debug, Clone, Default, Serialize)]
@@ -203,7 +203,7 @@ pub enum SchedulerDays {
 
 /// # `/api/v2/app/preferences`
 /// [`AppPreferences::encryption`]
-#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug,Clone,)]
+#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug, Clone)]
 #[repr(u8)]
 pub enum Encryption {
     PreferEncryption = 0,
@@ -213,7 +213,7 @@ pub enum Encryption {
 
 /// # `/api/v2/app/preferences`
 /// [`AppPreferences::proxy_type`]
-#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug, Clone,)]
+#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug, Clone)]
 #[repr(u8)]
 pub enum ProxyType {
     Disabled = 0,
@@ -303,14 +303,10 @@ impl Default for LogMainQuery {
 }
 
 /// # `/api/v2/log/main`
-#[derive(Debug, Clone, Deserialize)]
-#[serde(transparent)]
-pub struct LogMainResponse {
-    pub data: Vec<LogMainResponseItem>,
-}
+pub type LogMainResponse = Vec<LogMainResponseItem>;
 
 /// # `/api/v2/log/main`
-/// [`LogMainResponse::data`]
+/// [`LogMainResponse`]
 #[derive(Debug, Clone, Deserialize)]
 pub struct LogMainResponseItem {
     pub id: u64,
@@ -343,14 +339,10 @@ impl Default for LogPeersQuery {
 }
 
 /// # `/api/v2/log/peers`
-#[derive(Debug, Clone, Deserialize)]
-#[serde(transparent)]
-pub struct LogPeersResponse {
-    pub data: Vec<LogPeersResponseItem>,
-}
+pub type LogPeersResponse = Vec<LogPeersResponseItem>;
 
 /// # `/api/v2/log/peers`
-/// [`LogPeersResponse::data`]
+/// [`LogPeersResponse`]
 #[derive(Debug, Clone, Deserialize)]
 pub struct LogPeersResponseItem {
     pub id: u64,
@@ -567,7 +559,7 @@ pub struct BanPeersForm {
 
 /// # `/api/v2/torrents/info`
 #[serde_with::skip_serializing_none]
-#[derive(Debug, Clone, Serialize, Default)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsInfoQuery {
     pub filter: Option<TorrentsInfoFilter>,
     pub category: Option<String>,
@@ -576,14 +568,26 @@ pub struct TorrentsInfoQuery {
     pub reverse: Option<bool>,
     pub limit: Option<u64>,
     pub offset: Option<i64>,
-    pub hashes: Option<Hashes>,
+    #[serde(serialize_with = "ser_option_hashes")]
+    pub hashes: Option<Vec<String>>,
+}
+
+pub fn ser_option_hashes<S>(option_hashes: &Option<Vec<String>>, s: S) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    match option_hashes {
+        Some(hashes) => s.serialize_str(&hashes.join("|")),
+        None => s.serialize_none(),
+    }
 }
 
 /// # `/api/v2/torrents/info`
 /// [`TorrentsInfoQuery::filter`]
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum TorrentsInfoFilter {
+    #[default]
     All,
     Downloading,
     Seeding,
@@ -600,7 +604,7 @@ pub enum TorrentsInfoFilter {
 
 /// # `/api/v2/torrents/info`
 /// [`TorrentsInfoQuery::sort`]
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum TorrentsInfoSort {
     AddedOn,
@@ -621,6 +625,7 @@ pub enum TorrentsInfoSort {
     MagnetUri,
     MaxRatio,
     MaxSeedingTime,
+    #[default]
     Name,
     NumComplete,
     NumIncomplete,
@@ -647,19 +652,10 @@ pub enum TorrentsInfoSort {
 }
 
 /// # `/api/v2/torrents/info`
-/// [`TorrentsInfoQuery::hashes`]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Hashes(#[serde(with = "string_saperated_with_vertical_bar")] pub Vec<String>);
+pub type TorrentsInfoResponse = Vec<TorrentsInfoResponseItem>;
 
 /// # `/api/v2/torrents/info`
-#[derive(Debug, Clone, Deserialize)]
-#[serde(transparent)]
-pub struct TorrentsInfoResponse {
-    pub data: Vec<TorrentsInfoResponseItem>,
-}
-
-/// # `/api/v2/torrents/info`
-/// [`TorrentsInfoResponse::data`]
+/// [`TorrentsInfoResponse`]
 #[derive(Debug, Clone, Deserialize)]
 pub struct TorrentsInfoResponseItem {
     pub added_on: u64,
@@ -783,14 +779,10 @@ pub struct TorrentsTrackersQuery {
 }
 
 /// # `/api/v2/torrents/trackers`
-#[derive(Debug, Clone, Deserialize)]
-#[serde(transparent)]
-pub struct TorrentsTrackersResponse {
-    pub data: Vec<TorrentsTrackersResponseItem>,
-}
+pub type TorrentsTrackersResponse = Vec<TorrentsTrackersResponseItem>;
 
 /// # `/api/v2/torrents/trackers`
-/// [`TorrentsTrackersResponse::data`]
+/// [`TorrentsTrackersResponse`]
 #[derive(Debug, Clone, Deserialize)]
 pub struct TorrentsTrackersResponseItem {
     pub url: String,
@@ -822,14 +814,10 @@ pub struct TorrentsWebseedsQuery {
 }
 
 /// # `/api/v2/torrents/webseeds`
-#[derive(Debug, Clone, Deserialize)]
-#[serde(transparent)]
-pub struct TorrentsWebseedsResponse {
-    pub data: Vec<TorrentsWebseedsResponseItem>,
-}
+pub type TorrentsWebseedsResponse = Vec<TorrentsWebseedsResponseItem>;
 
 /// # `/api/v2/torrents/webseeds`
-/// [`TorrentsWebseedsResponse::data`]
+/// [`TorrentsWebseedsResponse`]
 #[derive(Debug, Clone, Deserialize)]
 pub struct TorrentsWebseedsResponseItem {
     pub url: String,
@@ -845,14 +833,10 @@ pub struct TorrentsFilesQuery {
 }
 
 /// # `/api/v2/torrents/files`
-#[derive(Debug, Clone, Deserialize)]
-#[serde(transparent)]
-pub struct TorrentsFilesResponse {
-    pub data: Vec<TorrentsFilesResponseItem>,
-}
+pub type TorrentsFilesResponse = Vec<TorrentsFilesResponseItem>;
 
 /// # `/api/v2/torrents/files`
-/// [`TorrentsFilesResponse::data`]
+/// [`TorrentsFilesResponse`]
 #[derive(Debug, Clone, Deserialize)]
 pub struct TorrentsFilesResponseItem {
     pub index: u64,
@@ -883,14 +867,10 @@ pub struct TorrentsPieceStatesQuery {
 }
 
 /// # `/api/v2/torrents/pieceStates`
-#[derive(Debug, Clone, Deserialize)]
-#[serde(transparent)]
-pub struct TorrentsPieceStatesResponse {
-    pub data: Vec<TorrentsPieceStates>,
-}
+pub type TorrentsPieceStatesResponse = Vec<TorrentsPieceStates>;
 
 /// # `/api/v2/torrents/pieceStates`
-/// [`TorrentsPieceStatesResponse::data`]
+/// [`TorrentsPieceStatesResponse`]
 #[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug, Clone)]
 #[repr(u8)]
 pub enum TorrentsPieceStates {
@@ -906,11 +886,7 @@ pub struct TorrentsPieceHashesQuery {
 }
 
 /// # `/api/v2/torrents/pieceHashes`
-#[derive(Debug, Clone, Deserialize)]
-#[serde(transparent)]
-pub struct TorrentsPieceHashesResponse {
-    pub data: Vec<String>,
-}
+pub type TorrentsPieceHashesResponse = Vec<String>;
 
 /// # `/api/v2/torrents/pause`
 ///
@@ -1479,6 +1455,7 @@ pub struct SearchStartForm {
     pub category: String,
 }
 
+/// # `api/v2/search/start`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(transparent)]
 pub struct SearchStartResponse {
@@ -1498,17 +1475,16 @@ pub struct SearchStatusQuery {
     pub id: Option<u64>,
 }
 
+/// # `/api/v2/search/status`
+pub type SearchStatusResponse = Vec<SearchStatusResponseItem>;
+
+/// # `/api/v2/search/status`
+/// [`SearchStatusResponse`]
 #[derive(Debug, Clone, Deserialize)]
 pub struct SearchStatusResponseItem {
     pub id: u64,
     pub status: String,
     pub total: u64,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(transparent)]
-pub struct SearchStatusResponse {
-    pub jobs: Vec<SearchStatusResponseItem>,
 }
 
 /// # `/api/v2/search/results`
@@ -1520,6 +1496,16 @@ pub struct SearchResultsQuery {
     pub offset: Option<i64>,
 }
 
+/// # `/api/v2/search/results`
+#[derive(Debug, Clone, Deserialize)]
+pub struct SearchResultsResponse {
+    pub results: Vec<SearchResultResponseItem>,
+    pub status: String,
+    pub total: u64,
+}
+
+/// # `/api/v2/search/results`
+/// [`SearchResultsResponse`]
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SearchResultResponseItem {
@@ -1530,13 +1516,6 @@ pub struct SearchResultResponseItem {
     pub nb_leechers: u64,
     pub nb_seeders: u64,
     pub site_url: String,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct SearchResultsResponse {
-    pub results: Vec<SearchResultResponseItem>,
-    pub status: String,
-    pub total: u64,
 }
 
 /// # `/api/v2/search/delete`
