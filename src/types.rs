@@ -1,17 +1,17 @@
 use crate::error::TypesError;
 use serde::{self, Deserialize, Serialize};
 use serde_repr::*;
-use std::collections::HashMap;
+use std::{collections::HashMap, default};
 
 /// # `/api/v2/auth/login`
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct AuthLoginForm {
     pub username: String,
     pub password: String,
 }
 
 /// # `/api/v2/app/buildInfo`
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct AppBuildInfoResponse {
     pub qt: String,
     pub libtorrent: String,
@@ -22,7 +22,7 @@ pub struct AppBuildInfoResponse {
 
 /// # `/api/v2/app/preferences`
 #[serde_with::skip_serializing_none]
-#[derive(Debug, Default, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct AppPreferences {
     pub locale: Option<String>,
     // pub create_subfolder_enabled: bool, // described in docs but not appear
@@ -178,7 +178,7 @@ pub struct AppPreferences {
 ///
 /// A better methed is to get the current preferences from `/api/v2/app/preferences` and change the fields within,
 /// then send the changed preferences back to `/api/v2/app/setPreferences`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct AppSetPreferencesForm {
     #[serde(with = "preferences_serialize")]
     pub json: AppPreferences,
@@ -186,7 +186,7 @@ pub struct AppSetPreferencesForm {
 
 /// # `/api/v2/app/preferences`
 /// [`AppPreferences::scheduler_days`]
-#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug)]
+#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug, Clone)]
 #[repr(u8)]
 pub enum SchedulerDays {
     EveryDay = 0,
@@ -203,7 +203,7 @@ pub enum SchedulerDays {
 
 /// # `/api/v2/app/preferences`
 /// [`AppPreferences::encryption`]
-#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug)]
+#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug,Clone,)]
 #[repr(u8)]
 pub enum Encryption {
     PreferEncryption = 0,
@@ -213,7 +213,7 @@ pub enum Encryption {
 
 /// # `/api/v2/app/preferences`
 /// [`AppPreferences::proxy_type`]
-#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug)]
+#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug, Clone,)]
 #[repr(u8)]
 pub enum ProxyType {
     Disabled = 0,
@@ -226,7 +226,7 @@ pub enum ProxyType {
 
 /// # `/api/v2/app/preferences`
 /// [`AppPreferences::dyndns_service`]
-#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug)]
+#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug, Clone)]
 #[repr(u8)]
 pub enum DynDnsService {
     DyDNS = 0,
@@ -235,7 +235,7 @@ pub enum DynDnsService {
 
 /// # `/api/v2/app/preferences`
 /// [`AppPreferences::bittorrent_protocol`]
-#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug)]
+#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug, Clone)]
 #[repr(u8)]
 pub enum MaxRatioAct {
     Pause = 0,
@@ -244,7 +244,7 @@ pub enum MaxRatioAct {
 
 /// # `/api/v2/app/preferences`
 /// [`AppPreferences::limit_utp_rate`]
-#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug)]
+#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug, Clone)]
 #[repr(u8)]
 pub enum BittorrentProtocol {
     TCPUTP = 0,
@@ -254,7 +254,7 @@ pub enum BittorrentProtocol {
 
 /// # `/api/v2/app/preferences`
 /// [`AppPreferences::upload_choking_algorithm`]
-#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug)]
+#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug, Clone)]
 #[repr(u8)]
 pub enum UploadChokingAlgorithm {
     RoundRobin = 0,
@@ -264,7 +264,7 @@ pub enum UploadChokingAlgorithm {
 
 /// # `/api/v2/app/preferences`
 /// [`AppPreferences::upload_slots_behavior`]
-#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug)]
+#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug, Clone)]
 #[repr(u8)]
 pub enum UploadSlotsBehavior {
     FixedSlots = 0,
@@ -273,7 +273,7 @@ pub enum UploadSlotsBehavior {
 
 /// # `/api/v2/app/preferences`
 /// [`AppPreferences::utp_tcp_mixed_mode`]
-#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug)]
+#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug, Clone)]
 #[repr(u8)]
 pub enum UtpTcpMixedMode {
     PreferTCP = 0,
@@ -281,7 +281,7 @@ pub enum UtpTcpMixedMode {
 }
 
 /// # `/api/v2/log/main`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct LogMainQuery {
     pub normal: bool,
     pub info: bool,
@@ -303,7 +303,7 @@ impl Default for LogMainQuery {
 }
 
 /// # `/api/v2/log/main`
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(transparent)]
 pub struct LogMainResponse {
     pub data: Vec<LogMainResponseItem>,
@@ -311,7 +311,7 @@ pub struct LogMainResponse {
 
 /// # `/api/v2/log/main`
 /// [`LogMainResponse::data`]
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct LogMainResponseItem {
     pub id: u64,
     pub message: String,
@@ -321,7 +321,7 @@ pub struct LogMainResponseItem {
 
 /// # `/api/v2/log/main`
 /// [`LogMainResponseItem::type`]
-#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug)]
+#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug, Clone)]
 #[repr(u8)]
 pub enum LogMainType {
     NORMAL = 1,
@@ -331,7 +331,7 @@ pub enum LogMainType {
 }
 
 /// # `/api/v2/log/peers`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct LogPeersQuery {
     pub last_known_id: i64,
 }
@@ -343,7 +343,7 @@ impl Default for LogPeersQuery {
 }
 
 /// # `/api/v2/log/peers`
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(transparent)]
 pub struct LogPeersResponse {
     pub data: Vec<LogPeersResponseItem>,
@@ -351,7 +351,7 @@ pub struct LogPeersResponse {
 
 /// # `/api/v2/log/peers`
 /// [`LogPeersResponse::data`]
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct LogPeersResponseItem {
     pub id: u64,
     pub ip: String,
@@ -361,13 +361,13 @@ pub struct LogPeersResponseItem {
 }
 
 /// # `/api/v2/sync/maindata`
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct SyncMaindataQuery {
     pub rid: u64,
 }
 
 /// # `/api/v2/sync/maindata`
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct SyncMaindataResponse {
     pub rid: u64,
     pub full_update: Option<bool>,
@@ -383,7 +383,7 @@ pub struct SyncMaindataResponse {
 
 /// # `/api/v2/sync/maindata`
 /// [`SyncMaindataResponse::torrents`]
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(transparent)]
 pub struct SyncMaindataTorrentsResponse {
     pub data: HashMap<String, SyncMaindataTorrentsResponseItem>,
@@ -393,7 +393,7 @@ pub struct SyncMaindataTorrentsResponse {
 /// [`SyncMaindataTorrentsResponse::data`]
 ///
 /// `Note`: similar to `TorrentsInfoResponseItem` but no `hash` field
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct SyncMaindataTorrentsResponseItem {
     pub added_on: Option<u64>,
     pub amount_left: Option<u64>,
@@ -441,7 +441,7 @@ pub struct SyncMaindataTorrentsResponseItem {
 
 /// # `/api/v2/sync/maindata`
 /// [`SyncMaindataResponse::server_state`]
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct ServerState {
     pub alltime_dl: Option<u64>,
     pub alltime_ul: Option<u64>,
@@ -471,7 +471,7 @@ pub struct ServerState {
 }
 
 /// # `/api/v2/sync/torrentPeers`
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct SyncTorrentPeersQuery {
     pub hash: String,
     pub rid: u64,
@@ -480,7 +480,7 @@ pub struct SyncTorrentPeersQuery {
 /// # `/api/v2/sync/torrentPeers`
 ///
 /// `Note`: The response's format remains TODO status in docs
-#[derive(Debug, Default, PartialEq, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Deserialize)]
 pub struct SyncTorrentPeersResponse {
     pub full_update: bool,
     pub peers: HashMap<String, SyncTorrentPeer>,
@@ -488,7 +488,7 @@ pub struct SyncTorrentPeersResponse {
 
 /// # `/api/v2/sync/torrentPeers`
 /// [`SyncTorrentPeersResponse::peers`]
-#[derive(Debug, PartialEq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct SyncTorrentPeer {
     pub client: String,
     pub connection: String,
@@ -509,7 +509,7 @@ pub struct SyncTorrentPeer {
 }
 
 /// # `/api/v2/transfer/info`
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct TransferInfoResponse {
     pub dl_info_speed: u64,
     pub dl_info_data: u64,
@@ -526,7 +526,7 @@ pub struct TransferInfoResponse {
 /// [`ServerState::connection_status`]
 ///
 /// [`TransferInfoResponse::connection_status`]
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub enum ConnectionStatus {
     #[serde(rename = "connected")]
     Connected,
@@ -537,7 +537,7 @@ pub enum ConnectionStatus {
 }
 
 /// # `/api/v2/transfer/speedLimitsMode`
-#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug)]
+#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug, Clone)]
 #[repr(u8)]
 pub enum SpeedLimitsModeResponse {
     Normal = 0,
@@ -545,13 +545,13 @@ pub enum SpeedLimitsModeResponse {
 }
 
 /// # `/api/v2/transfer/setDownloadLimit`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct SetDownloadLimitForm {
     pub limit: u64,
 }
 
 /// # `/api/v2/transfer/setUploadLimit`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct SetUploadLimitForm {
     pub limit: u64,
 }
@@ -559,36 +559,29 @@ pub struct SetUploadLimitForm {
 /// # `/api/v2/transfer/banPeers`
 ///
 /// `peers` format `Vec<host:port>`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct BanPeersForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
     pub peers: Vec<String>,
 }
 
 /// # `/api/v2/torrents/info`
-#[derive(Debug, Serialize, Default)]
+#[serde_with::skip_serializing_none]
+#[derive(Debug, Clone, Serialize, Default)]
 pub struct TorrentsInfoQuery {
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub filter: Option<TorrentsInfoFilter>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub category: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub tag: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub sort: Option<TorrentsInfoSort>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub reverse: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub limit: Option<u64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub offset: Option<i64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub hashes: Option<Hashes>,
 }
 
 /// # `/api/v2/torrents/info`
 /// [`TorrentsInfoQuery::filter`]
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum TorrentsInfoFilter {
     All,
@@ -607,7 +600,7 @@ pub enum TorrentsInfoFilter {
 
 /// # `/api/v2/torrents/info`
 /// [`TorrentsInfoQuery::sort`]
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum TorrentsInfoSort {
     AddedOn,
@@ -655,11 +648,11 @@ pub enum TorrentsInfoSort {
 
 /// # `/api/v2/torrents/info`
 /// [`TorrentsInfoQuery::hashes`]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Hashes(#[serde(with = "string_saperated_with_vertical_bar")] pub Vec<String>);
 
 /// # `/api/v2/torrents/info`
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(transparent)]
 pub struct TorrentsInfoResponse {
     pub data: Vec<TorrentsInfoResponseItem>,
@@ -667,7 +660,7 @@ pub struct TorrentsInfoResponse {
 
 /// # `/api/v2/torrents/info`
 /// [`TorrentsInfoResponse::data`]
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct TorrentsInfoResponseItem {
     pub added_on: u64,
     pub amount_left: u64,
@@ -715,7 +708,7 @@ pub struct TorrentsInfoResponseItem {
 
 /// # `/api/v2/torrents/info`
 /// [`TorrentsInfoResponseItem::state`]
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum TorrentsInfoState {
     Error,
@@ -740,13 +733,13 @@ pub enum TorrentsInfoState {
 }
 
 /// # `/api/v2/torrents/properties`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsPropertiesQuery {
     pub hash: String,
 }
 
 /// # `/api/v2/torrents/properties`
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct TorrentsPropertiesResponse {
     pub save_path: String,
     pub creation_date: u64,
@@ -784,13 +777,13 @@ pub struct TorrentsPropertiesResponse {
 }
 
 /// # `/api/v2/torrents/trackers`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsTrackersQuery {
     pub hash: String,
 }
 
 /// # `/api/v2/torrents/trackers`
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(transparent)]
 pub struct TorrentsTrackersResponse {
     pub data: Vec<TorrentsTrackersResponseItem>,
@@ -798,7 +791,7 @@ pub struct TorrentsTrackersResponse {
 
 /// # `/api/v2/torrents/trackers`
 /// [`TorrentsTrackersResponse::data`]
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct TorrentsTrackersResponseItem {
     pub url: String,
     pub status: TrackerStatus,
@@ -812,7 +805,7 @@ pub struct TorrentsTrackersResponseItem {
 
 /// # `/api/v2/torrents/trackers`
 /// [`TorrentsTrackersResponseItem::status`]
-#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug)]
+#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug, Clone)]
 #[repr(u8)]
 pub enum TrackerStatus {
     Disabled = 0,
@@ -823,13 +816,13 @@ pub enum TrackerStatus {
 }
 
 /// # `/api/v2/torrents/webseeds`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsWebseedsQuery {
     pub hash: String,
 }
 
 /// # `/api/v2/torrents/webseeds`
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(transparent)]
 pub struct TorrentsWebseedsResponse {
     pub data: Vec<TorrentsWebseedsResponseItem>,
@@ -837,27 +830,22 @@ pub struct TorrentsWebseedsResponse {
 
 /// # `/api/v2/torrents/webseeds`
 /// [`TorrentsWebseedsResponse::data`]
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct TorrentsWebseedsResponseItem {
     pub url: String,
 }
 
 /// # `/api/v2/torrents/files`
-#[derive(Debug, Default, Serialize)]
+#[serde_with::skip_serializing_none]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsFilesQuery {
     pub hash: String,
-    pub indexes: Option<FileIndexes>,
+    // like 0|1|2|3|2|2|2|2...
+    pub indexes: Option<String>,
 }
 
 /// # `/api/v2/torrents/files`
-/// [`TorrentsFilesQuery::indexes`]
-#[derive(Debug, Serialize)]
-pub struct FileIndexes(
-    #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")] pub Vec<String>,
-);
-
-/// # `/api/v2/torrents/files`
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(transparent)]
 pub struct TorrentsFilesResponse {
     pub data: Vec<TorrentsFilesResponseItem>,
@@ -865,7 +853,7 @@ pub struct TorrentsFilesResponse {
 
 /// # `/api/v2/torrents/files`
 /// [`TorrentsFilesResponse::data`]
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct TorrentsFilesResponseItem {
     pub index: u64,
     pub name: String,
@@ -879,7 +867,7 @@ pub struct TorrentsFilesResponseItem {
 
 /// # `/api/v2/torrents/files`
 /// [`TorrentsFilesResponseItem::priority`]
-#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug)]
+#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug, Clone)]
 #[repr(u8)]
 pub enum TorrentsFilesPriority {
     NotDownload = 0,
@@ -889,13 +877,13 @@ pub enum TorrentsFilesPriority {
 }
 
 /// # `/api/v2/torrents/pieceStates`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsPieceStatesQuery {
     pub hash: String,
 }
 
 /// # `/api/v2/torrents/pieceStates`
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(transparent)]
 pub struct TorrentsPieceStatesResponse {
     pub data: Vec<TorrentsPieceStates>,
@@ -903,7 +891,7 @@ pub struct TorrentsPieceStatesResponse {
 
 /// # `/api/v2/torrents/pieceStates`
 /// [`TorrentsPieceStatesResponse::data`]
-#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug)]
+#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug, Clone)]
 #[repr(u8)]
 pub enum TorrentsPieceStates {
     NotDownloaded = 0,
@@ -912,13 +900,13 @@ pub enum TorrentsPieceStates {
 }
 
 /// # `/api/v2/torrents/pieceHashes`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsPieceHashesQuery {
     pub hash: String,
 }
 
 /// # `/api/v2/torrents/pieceHashes`
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(transparent)]
 pub struct TorrentsPieceHashesResponse {
     pub data: Vec<String>,
@@ -928,7 +916,7 @@ pub struct TorrentsPieceHashesResponse {
 ///
 /// `warning`: it was described in the docs that parameter should be a query.
 /// but it actually should be a form
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsPauseForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
     pub hashes: Vec<String>,
@@ -945,7 +933,7 @@ impl TorrentsPauseForm {
 ///
 /// `warning`: it was described in the docs that parameter should be a query.
 /// but it actually should be a form
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsResumeForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
     pub hashes: Vec<String>,
@@ -962,7 +950,7 @@ impl TorrentsResumeForm {
 ///
 /// `warning`: it was described in the docs that parameter should be a query.
 /// but it actually should be a form
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsDeleteForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
     pub hashes: Vec<String>,
@@ -982,7 +970,7 @@ impl TorrentsDeleteForm {
 ///
 /// `warning`: it was described in the docs that parameter should be a query.
 /// but it actually should be a form
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsRecheckForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
     pub hashes: Vec<String>,
@@ -999,7 +987,7 @@ impl TorrentsRecheckForm {
 ///
 /// `warning`: it was described in the docs that parameter should be a query.
 /// but it actually should be a form
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsReannounceForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
     pub hashes: Vec<String>,
@@ -1013,7 +1001,7 @@ impl TorrentsReannounceForm {
 }
 
 /// # `/api/v2/torrents/add`
-#[derive(Debug, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct TorrentsAddMultipart {
     pub urls: Vec<String>,
     pub torrents: Vec<(String, Vec<u8>)>,
@@ -1130,7 +1118,7 @@ impl TorrentsAddMultipart {
 }
 
 /// # `/api/v2/torrents/addTrackers`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsAddTrackersForm {
     pub hash: String,
     #[serde(serialize_with = "string_saperated_with_backslash_n::serialize")]
@@ -1138,7 +1126,7 @@ pub struct TorrentsAddTrackersForm {
 }
 
 /// # `/api/v2/torrents/editTracker`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TorrentsEditTrackerForm {
     pub hash: String,
@@ -1147,7 +1135,7 @@ pub struct TorrentsEditTrackerForm {
 }
 
 /// # `/api/v2/torrents/removeTrackers`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsRemoveTrackersForm {
     pub hash: String,
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
@@ -1155,7 +1143,7 @@ pub struct TorrentsRemoveTrackersForm {
 }
 
 /// # `/api/v2/torrents/addPeers`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsAddPeersForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
     pub hashes: Vec<String>,
@@ -1167,7 +1155,7 @@ pub struct TorrentsAddPeersForm {
 ///
 /// `warning`: it was described in the docs that parameter should be a query.
 /// but it actually should be a form
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsIncreasePrioForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
     pub hashes: Vec<String>,
@@ -1184,7 +1172,7 @@ impl TorrentsIncreasePrioForm {
 ///
 /// `warning`: it was described in the docs that parameter should be a query .
 /// but it actually should be a form
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsDecreasePrioForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
     pub hashes: Vec<String>,
@@ -1201,7 +1189,7 @@ impl TorrentsDecreasePrioForm {
 ///
 /// `warning`: it was described in the docs that parameter should be a query .
 /// but it actually should be a form
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsTopPrioForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
     pub hashes: Vec<String>,
@@ -1218,7 +1206,7 @@ impl TorrentsTopPrioForm {
 ///
 /// `warning`: it was described in the docs that parameter should be a query .
 /// but it actually should be a form
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsBottomPrioForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
     pub hashes: Vec<String>,
@@ -1238,21 +1226,21 @@ impl TorrentsBottomPrioForm {
 ///
 /// `Warning`: it was described in the docs that hashes can be setted to "all",
 ///  but it doesn't work
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsDownloadLimitForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
     pub hashes: Vec<String>,
 }
 
 /// # `/api/v2/torrents/downloadLimit`
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(transparent)]
 pub struct TorrentsDownloadLimitResponse {
     pub data: HashMap<String, u64>,
 }
 
 /// # `/api/v2/torrents/setDownloadLimit`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsSetDownloadLimitForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
     pub hashes: Vec<String>,
@@ -1261,7 +1249,7 @@ pub struct TorrentsSetDownloadLimitForm {
 }
 
 /// # `/api/v2/torrents/setShareLimits`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TorrentsSetShareLimitsForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
@@ -1281,7 +1269,7 @@ pub struct TorrentsSetShareLimitsForm {
 ///
 /// define this type to solve the problem that if ratio_limit is a f64,
 /// the value -2 and -1 will be serialized to -2.0 and -1.0
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum RatioLimit {
     Limit {
@@ -1294,25 +1282,31 @@ pub enum RatioLimit {
     },
 }
 
+impl Default for RatioLimit {
+    fn default() -> Self {
+        Self::Special { ratio_limit: -2 }
+    }
+}
+
 /// # `/api/v2/torrents/uploadLimit`
 ///
 /// `Warning`: it was described in the docs that hashes can be setted to "all",
 ///  but it doesn't work
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsUploadLimitForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
     pub hashes: Vec<String>,
 }
 
 /// # `/api/v2/torrents/uploadLimit`
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(transparent)]
 pub struct TorrentsUploadLimitResponse {
     pub data: HashMap<String, u64>,
 }
 
 /// # `/api/v2/torrents/setUploadLimit`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsSetUploadLimitForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
     pub hashes: Vec<String>,
@@ -1321,7 +1315,7 @@ pub struct TorrentsSetUploadLimitForm {
 }
 
 /// # `/api/v2/torrents/setLocation`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsSetLocationForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
     pub hashes: Vec<String>,
@@ -1329,14 +1323,14 @@ pub struct TorrentsSetLocationForm {
 }
 
 /// # `/api/v2/torrents/rename`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsRenameForm {
     pub hash: String,
     pub name: String,
 }
 
 /// # `/api/v2/torrents/setCategory`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsSetCategoryForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
     pub hashes: Vec<String>,
@@ -1344,7 +1338,7 @@ pub struct TorrentsSetCategoryForm {
 }
 
 /// # `/api/v2/torrents/categories`
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(transparent)]
 pub struct TorrentsCategoriesResponse {
     pub catagories: HashMap<String, CategoriesDetails>,
@@ -1352,7 +1346,7 @@ pub struct TorrentsCategoriesResponse {
 
 /// # `/api/v2/torrents/categories`
 /// [`TorrentsCategoriesResponse::catagories`]
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CategoriesDetails {
     pub name: String,
@@ -1360,7 +1354,7 @@ pub struct CategoriesDetails {
 }
 
 /// # `/api/v2/torrents/createCategory`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TorrentsCreateCategoryForm {
     pub category: String,
@@ -1368,7 +1362,7 @@ pub struct TorrentsCreateCategoryForm {
 }
 
 /// # `/api/v2/torrents/editCategory`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TorrentsEditCategoryForm {
     pub category: String,
@@ -1376,14 +1370,14 @@ pub struct TorrentsEditCategoryForm {
 }
 
 /// # `/api/v2/torrents/removeCategories`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsRemoveCategoriesForm {
     #[serde(serialize_with = "string_saperated_with_backslash_n::serialize")]
     pub categories: Vec<String>,
 }
 
 /// # `/api/v2/torrents/addTags`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsAddTagsForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
     pub hashes: Vec<String>,
@@ -1392,7 +1386,7 @@ pub struct TorrentsAddTagsForm {
 }
 
 /// # `/api/v2/torrents/removeTags`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsRemoveTagsForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
     pub hashes: Vec<String>,
@@ -1401,28 +1395,28 @@ pub struct TorrentsRemoveTagsForm {
 }
 
 /// # `/api/v2/torrents/tags`
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(transparent)]
 pub struct TorrentsTagsResponse {
     pub tags: Vec<String>,
 }
 
 /// # `/api/v2/torrents/createTags`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsCreateTagsForm {
     #[serde(serialize_with = "string_saperated_with_comma::serialize")]
     pub tags: Vec<String>,
 }
 
 /// # `/api/v2/torrents/deleteTags`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsDeleteTagsForm {
     #[serde(serialize_with = "string_saperated_with_comma::serialize")]
     pub tags: Vec<String>,
 }
 
 /// # `/api/v2/torrents/setAutoManagement`
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsSetAutoManagementForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
     pub hashes: Vec<String>,
@@ -1430,21 +1424,21 @@ pub struct TorrentsSetAutoManagementForm {
 }
 
 /// # `/api/v2/torrents/toggleSequentialDownload`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsToggleSequentialDownloadForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
     pub hashes: Vec<String>,
 }
 
 /// # `/api/v2/torrents/toggleFirstLastPiecePrio`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsToggleFirstLastPiecePrioForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
     pub hashes: Vec<String>,
 }
 
 /// # `/api/v2/torrents/setForceStart`
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsSetForceStartForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
     pub hashes: Vec<String>,
@@ -1452,7 +1446,7 @@ pub struct TorrentsSetForceStartForm {
 }
 
 /// # `/api/v2/torrents/setSuperSeeding`
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct TorrentsSetSuperSeedingForm {
     #[serde(serialize_with = "string_saperated_with_vertical_bar::serialize")]
     pub hashes: Vec<String>,
@@ -1460,7 +1454,7 @@ pub struct TorrentsSetSuperSeedingForm {
 }
 
 /// # `/api/v2/torrents/renameFile`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TorrentsRenameFileForm {
     pub hash: String,
@@ -1469,7 +1463,7 @@ pub struct TorrentsRenameFileForm {
 }
 
 /// # `/api/v2/torrents/renameFolder`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TorrentsRenameFolderForm {
     pub hash: String,
@@ -1478,53 +1472,55 @@ pub struct TorrentsRenameFolderForm {
 }
 
 /// # `api/v2/search/start`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct SearchStartForm {
     pub pattern: String,
     pub plugins: String,
     pub category: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(transparent)]
 pub struct SearchStartResponse {
     pub job: HashMap<String, u64>,
 }
 
 /// # `/api/v2/search/stop`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct SearchStopForm {
     pub id: u64,
 }
 
 /// # `/api/v2/search/status`
-#[derive(Debug, Serialize)]
+#[serde_with::skip_serializing_none]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct SearchStatusQuery {
     pub id: Option<u64>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct SearchStatusResponseItem {
     pub id: u64,
     pub status: String,
     pub total: u64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(transparent)]
 pub struct SearchStatusResponse {
     pub jobs: Vec<SearchStatusResponseItem>,
 }
 
 /// # `/api/v2/search/results`
-#[derive(Debug, Serialize)]
+#[serde_with::skip_serializing_none]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct SearchResultsQuery {
     pub id: u64,
     pub limit: Option<i64>,
     pub offset: Option<i64>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SearchResultResponseItem {
     pub descr_link: String,
@@ -1536,7 +1532,7 @@ pub struct SearchResultResponseItem {
     pub site_url: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct SearchResultsResponse {
     pub results: Vec<SearchResultResponseItem>,
     pub status: String,
@@ -1544,7 +1540,7 @@ pub struct SearchResultsResponse {
 }
 
 /// # `/api/v2/search/delete`
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct SearchDeleteForm {
     pub id: u64,
 }

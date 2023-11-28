@@ -1,5 +1,4 @@
-// #![warn(missing_docs)]
-//! A asynchronous Rust wrapper for qBittorrent Web API
+#![doc = include_str!("../README.md")]
 
 pub mod api;
 pub mod client;
