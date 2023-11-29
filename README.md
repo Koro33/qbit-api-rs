@@ -14,7 +14,7 @@ add dependency
 
 ```toml
 [dependencies]
-qbit-api-rs = "0.1"
+qbit-api-rs = "0.2"
 ```
 
 or
