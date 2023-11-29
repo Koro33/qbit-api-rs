@@ -1,6 +1,10 @@
 # qbit-api-rs
 
-[![GitHub release (release name instead of tag name)](https://img.shields.io/github/v/release/koro33/qbit-api-rs)](https://github.com/Koro33/qbit-api-rs/releases) [![Rust](https://img.shields.io/badge/Rust-stable-brightgreen)](https://www.rust-lang.org/) [![Static Badge](https://img.shields.io/badge/license-Apache--2.0_OR_MIT-blue)](./LICENSE-APACHE) [![GitHub Repo stars](https://img.shields.io/github/stars/koro33/qbit-api-rs?style=social)](https://github.com/Koro33/qbit-api-rs)
+[![GitHub release (release name instead of tag name)](https://img.shields.io/github/v/release/koro33/qbit-api-rs)](https://github.com/Koro33/qbit-api-rs/releases)
+[![Rust](https://img.shields.io/badge/Rust-stable-brightgreen)](https://www.rust-lang.org/)
+[![docs.rs](https://img.shields.io/docsrs/qbit-api-rs)](https://docs.rs/qbit-api-rs)
+[![Static Badge](https://img.shields.io/badge/license-Apache--2.0_OR_MIT-blue)](./LICENSE-APACHE)
+[![GitHub Repo stars](https://img.shields.io/github/stars/koro33/qbit-api-rs?style=social)](https://github.com/Koro33/qbit-api-rs)
 
 A asynchronous Rust wrapper for qBittorrent [Web API](https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)) (For version above 4.1).
 
@@ -19,9 +23,9 @@ or
 cargo add qbit-api-rs
 ```
 
-usage
+a quick start
 
-```rust
+```rust, no_run
 use qbit_api_rs::client::QbitClient;
 
 #[tokio::main]
@@ -36,8 +40,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     client.auth_login().await?;
 
     // call api methods
-    let v = client.app_version().await?;
-    println!("{}", v);
+    println!("{}", client.app_version().await?);
 
     //...
     Ok(())
@@ -50,11 +53,13 @@ For more usage, please refer to [examples](https://github.com/Koro33/qbit-api-rs
 
 - This crate provides only pure API bindings. There is no such mechanism like reauthentication when the token expires.
 
-- qBitTorrent uses cookie to authenticate. The acquired SID token stored in cookie, and will be expired after a while(default 3600 seconds). This expired time can be configured in the `Options -> WebUI -> Authentication -> Session timeout`. To keep the SID token valid, you can either
+- qBitTorrent uses cookie to authenticate. The authentication required SID token stored in cookie, and will be expired after a while(default 3600 seconds). This expired time can be configured in the `Options -> WebUI -> Authentication -> Session timeout`. To keep the SID token valid, you can either
   - periodically(within the timeout period) call login method to reauthenticate.
   - or just enable `Bypass authentication for clients in whitelisted IP subnets` and configure your IP subnets, then you don't need to call login method anymore.
 
-- This crate is at the early stage of development. Things might break in the future.
+- For version above 4.6.1, the default credentials are not `admin:adminadmin`. You have to set your own credentials or the qBittorrent will generate a random one. For more details, refer to [the release note](https://www.qbittorrent.org/news#mon-nov-20th-2023---qbittorrent-v4.6.1-release)
+
+- **This crate is at the early stage of development. Things might break in the future.**
 
 ## Supported APIs
 
