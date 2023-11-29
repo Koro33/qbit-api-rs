@@ -16,6 +16,9 @@ pub enum ClientError {
     InvalidMultipart(String),
     #[error("Send Request Error")]
     ReqwestError(#[from] reqwest::Error),
+    #[error("Parse Error")]
+    ParseError,
+
     #[error("Torrents with hashes ({hash}) Not Found.")]
     TorrentNotFound { hash: String },
     #[error("Torrent File under {path} is invalid.")]

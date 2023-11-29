@@ -20,28 +20,28 @@ async fn main() -> Result<()> {
         "magnet:?xt=urn:btih:TZRYKYVLDQP45WO66FBIMTG5LJYBTYNK&dn=ubuntu-22.04.2-live-server-amd64.iso&xl=1975971840&tr=https%3A%2F%2Ftorrent.ubuntu.com%2Fannounce"
         // ...
     ];
-    let _ = qb_cli.torrents_add_by_url(&torrent_urls).await?;
+    qb_cli.torrents_add_by_url(&torrent_urls).await?;
     torrent_urls
         .iter()
         .for_each(|url| log::info!("torrent added by url: {:?}", url));
 
     //// add torrent by torrent file
-    let torrent_files = [
-        "tests/ubuntu-22.04.2-live-server-amd64.iso.torrent",
-        // ...
-    ];
-    let _ = qb_cli.torrents_add_by_file(&torrent_files).await?;
-    torrent_files.iter().for_each(|f| {
-        log::info!(
-            "torrent added by file: {:?}",
-            std::path::Path::new(f).file_name().unwrap()
-        )
-    });
+    // let torrent_files = [
+    //     "tests/ubuntu-22.04.2-live-server-amd64.iso.torrent",
+    //     // ...
+    // ];
+    // qb_cli.torrents_add_by_file(&torrent_files).await?;
+    // torrent_files.iter().for_each(|f| {
+    //     log::info!(
+    //         "torrent added by file: {:?}",
+    //         std::path::Path::new(f).file_name().unwrap()
+    //     )
+    // });
 
     //// list torrents
-    let q = types::TorrentsInfoQuery {
-        filter: Some(types::TorrentsInfoFilter::All),
-        sort: Some(types::TorrentsInfoSort::Name),
+    let q = types::torrents::InfoQuery {
+        filter: Some(types::torrents::InfoFilter::All),
+        sort: Some(types::torrents::InfoSort::Name),
         reverse: Some(true),
         // ...
         ..Default::default()
@@ -57,30 +57,30 @@ async fn main() -> Result<()> {
 
     //// pause torrents
     let torrent_hashes = [
-        "9e638562ab1c1fced9def142864cdd5a7019e1aa".to_owned(),
+        "9e638562ab1c1fced9def142864cdd5a7019e1aa",
         // ...
     ];
-    let _ = qb_cli.torrents_pause(&torrent_hashes).await?;
+    qb_cli.torrents_pause(&torrent_hashes).await?;
     torrent_hashes
         .iter()
         .for_each(|h| log::info!("torrent paused: {:?}", h));
 
     //// resume torrents
     let torrent_hashes = [
-        "9e638562ab1c1fced9def142864cdd5a7019e1aa".to_owned(),
+        "9e638562ab1c1fced9def142864cdd5a7019e1aa",
         // ...
     ];
-    let _ = qb_cli.torrents_resume(&torrent_hashes).await?;
+    qb_cli.torrents_resume(&torrent_hashes).await?;
     torrent_hashes
         .iter()
         .for_each(|h| log::info!("torrent resumed: {:?}", h));
 
     //// delete torrents
     let torrent_hashes = [
-        "9e638562ab1c1fced9def142864cdd5a7019e1aa".to_owned(),
+        "9e638562ab1c1fced9def142864cdd5a7019e1aa",
         // ...
     ];
-    let _ = qb_cli.torrents_delete(&torrent_hashes, true).await?;
+    qb_cli.torrents_delete(&torrent_hashes, true).await?;
     torrent_hashes
         .iter()
         .for_each(|h| log::info!("torrent deleted: {:?}", h));

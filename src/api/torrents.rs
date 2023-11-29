@@ -2,643 +2,19 @@ use crate::error::ClientError;
 use crate::types;
 use async_trait::async_trait;
 use reqwest::{Method, StatusCode};
-use serde::{de::DeserializeOwned, Serialize};
 use std::borrow::Cow;
-
-#[async_trait]
-pub trait Endpoint {
-    /// define type of query, form and response
-    type Query: Serialize;
-    type Form: Serialize;
-    type Response: DeserializeOwned;
-    /// The endpoint relative path. Must start with a `/`
-    fn relative_path(&self) -> Cow<str>;
-    /// The query to be used when calling this endpoint.
-    fn query(&self) -> Option<&Self::Query> {
-        None
-    }
-    /// The form body to be used when calling this endpoint.
-    fn form(&self) -> Option<&Self::Form> {
-        None
-    }
-    /// The multipart to be used when calling this endpoint.
-    fn multipart(&self) -> Option<reqwest::multipart::Form> {
-        None
-    }
-    /// The request method of this endpoint. either POST or GET.
-    fn method(&self) -> reqwest::Method {
-        reqwest::Method::POST
-    }
-    /// Check the status code
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError>;
-    /// Deserialize the response
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError>;
-}
-
-/// # `/api/v2/auth/login`
-pub struct AuthLogin {
-    pub f: types::AuthLoginForm,
-}
-
-#[async_trait]
-impl Endpoint for AuthLogin {
-    type Query = ();
-    type Form = types::AuthLoginForm;
-    type Response = String;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/auth/login".into()
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::POST
-    }
-    fn form(&self) -> Option<&Self::Form> {
-        Some(&self.f)
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::Authentication),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.text().await?)
-    }
-}
-
-/// # `/api/v2/auth/logout`
-pub struct AuthLogout;
-
-#[async_trait]
-impl Endpoint for AuthLogout {
-    type Query = ();
-    type Form = ();
-    type Response = String;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/auth/logout".into()
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::POST
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.text().await?)
-    }
-}
-
-/// # `/api/v2/app/version`
-pub struct AppVersion;
-
-#[async_trait]
-impl Endpoint for AppVersion {
-    type Query = ();
-    type Form = ();
-    type Response = String;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/app/version".into()
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::GET
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.text().await?)
-    }
-}
-
-/// # `/api/v2/app/webapiVersion`
-pub struct AppWebApiVersion;
-
-#[async_trait]
-impl Endpoint for AppWebApiVersion {
-    type Query = ();
-    type Form = ();
-    type Response = String;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/app/webapiVersion".into()
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::GET
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.text().await?)
-    }
-}
-
-/// # `/api/v2/app/buildInfo`
-pub struct AppBuildInfo;
-
-#[async_trait]
-impl Endpoint for AppBuildInfo {
-    type Query = ();
-    type Form = ();
-    type Response = types::AppBuildInfoResponse;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/app/buildInfo".into()
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::GET
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.json::<types::AppBuildInfoResponse>().await?)
-    }
-}
-
-/// # `/api/v2/app/shutdown`
-pub struct AppShutdown;
-
-#[async_trait]
-impl Endpoint for AppShutdown {
-    type Query = ();
-    type Form = ();
-    type Response = String;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/app/shutdown".into()
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::POST
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.text().await?)
-    }
-}
-
-/// # `/api/v2/app/preferences`
-pub struct AppPreferences;
-
-#[async_trait]
-impl Endpoint for AppPreferences {
-    type Query = ();
-    type Form = ();
-    type Response = types::AppPreferences;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/app/preferences".into()
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::GET
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.json::<types::AppPreferences>().await?)
-    }
-}
-
-/// # `/api/v2/app/setPreferences`
-pub struct AppSetPreferences {
-    pub f: types::AppSetPreferencesForm,
-}
-
-#[async_trait]
-impl Endpoint for AppSetPreferences {
-    type Query = ();
-    type Form = types::AppSetPreferencesForm;
-    type Response = String;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/app/setPreferences".into()
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::POST
-    }
-    fn form(&self) -> Option<&Self::Form> {
-        Some(&self.f)
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.text().await?)
-    }
-}
-
-/// # `/api/v2/app/defaultSavePath`
-pub struct AppDefaultSavePath;
-
-#[async_trait]
-impl Endpoint for AppDefaultSavePath {
-    type Query = ();
-    type Form = ();
-    type Response = String;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/app/defaultSavePath".into()
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::GET
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.text().await?)
-    }
-}
-
-/// # `/api/v2/log/main`
-pub struct LogMain {
-    pub q: types::LogMainQuery,
-}
-
-#[async_trait]
-impl Endpoint for LogMain {
-    type Query = types::LogMainQuery;
-    type Form = ();
-    type Response = types::LogMainResponse;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/log/main".into()
-    }
-    fn query(&self) -> Option<&Self::Query> {
-        Some(&self.q)
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::GET
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.json::<types::LogMainResponse>().await?)
-    }
-}
-
-/// # `/api/v2/log/peers`
-pub struct LogPeers {
-    pub q: types::LogPeersQuery,
-}
-
-#[async_trait]
-impl Endpoint for LogPeers {
-    type Query = types::LogPeersQuery;
-    type Form = ();
-    type Response = types::LogPeersResponse;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/log/peers".into()
-    }
-    fn query(&self) -> Option<&Self::Query> {
-        Some(&self.q)
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::GET
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.json::<types::LogPeersResponse>().await?)
-    }
-}
-
-/// # `/api/v2/sync/maindata`
-pub struct Maindata {
-    pub q: types::SyncMaindataQuery,
-}
-
-#[async_trait]
-impl Endpoint for Maindata {
-    type Query = types::SyncMaindataQuery;
-    type Form = ();
-    type Response = types::SyncMaindataResponse;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/sync/maindata".into()
-    }
-    fn query(&self) -> Option<&Self::Query> {
-        Some(&self.q)
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::POST
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.json::<types::SyncMaindataResponse>().await?)
-    }
-}
-
-/// # `/api/v2/sync/torrentPeers`
-pub struct TorrentPeers {
-    pub q: types::SyncTorrentPeersQuery,
-}
-
-#[async_trait]
-impl Endpoint for TorrentPeers {
-    type Query = types::SyncTorrentPeersQuery;
-    type Form = ();
-    type Response = types::SyncTorrentPeersResponse;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/sync/torrentPeers".into()
-    }
-    fn query(&self) -> Option<&Self::Query> {
-        Some(&self.q)
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::GET
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            StatusCode::NOT_FOUND => Some(ClientError::TorrentNotFound {
-                hash: self.q.hash.clone(),
-            }),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.json::<types::SyncTorrentPeersResponse>().await?)
-    }
-}
-
-/// # `/api/v2/transfer/info`
-pub struct TransferInfo;
-
-#[async_trait]
-impl Endpoint for TransferInfo {
-    type Query = ();
-    type Form = ();
-    type Response = types::TransferInfoResponse;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/transfer/info".into()
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::GET
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.json::<types::TransferInfoResponse>().await?)
-    }
-}
-
-/// # `/api/v2/transfer/speedLimitsMode`
-pub struct SpeedLimitsMode;
-
-#[async_trait]
-impl Endpoint for SpeedLimitsMode {
-    type Query = ();
-    type Form = ();
-    type Response = types::SpeedLimitsModeResponse;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/transfer/speedLimitsMode".into()
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::POST
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.json::<types::SpeedLimitsModeResponse>().await?)
-    }
-}
-
-/// # `/api/v2/transfer/toggleSpeedLimitsMode`
-pub struct ToggleSpeedLimitsMode;
-
-#[async_trait]
-impl Endpoint for ToggleSpeedLimitsMode {
-    type Query = ();
-    type Form = ();
-    type Response = String;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/transfer/toggleSpeedLimitsMode".into()
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::POST
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.text().await?)
-    }
-}
-
-/// # `/api/v2/transfer/downloadLimit`
-pub struct DownloadLimit;
-
-#[async_trait]
-impl Endpoint for DownloadLimit {
-    type Query = ();
-    type Form = ();
-    type Response = String;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/transfer/downloadLimit".into()
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::POST
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.text().await?)
-    }
-}
-
-/// # `/api/v2/transfer/setDownloadLimit`
-pub struct SetDownloadLimit {
-    pub f: types::SetDownloadLimitForm,
-}
-
-#[async_trait]
-impl Endpoint for SetDownloadLimit {
-    type Query = ();
-    type Form = types::SetDownloadLimitForm;
-    type Response = String;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/transfer/setDownloadLimit".into()
-    }
-    fn form(&self) -> Option<&Self::Form> {
-        Some(&self.f)
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::POST
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.text().await?)
-    }
-}
-
-/// # `/api/v2/transfer/uploadLimit`
-pub struct UploadLimit;
-
-#[async_trait]
-impl Endpoint for UploadLimit {
-    type Query = ();
-    type Form = ();
-    type Response = String;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/transfer/uploadLimit".into()
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::POST
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.text().await?)
-    }
-}
-
-/// # `/api/v2/transfer/setUploadLimit`
-pub struct SetUploadLimit {
-    pub f: types::SetUploadLimitForm,
-}
-
-#[async_trait]
-impl Endpoint for SetUploadLimit {
-    type Query = ();
-    type Form = types::SetUploadLimitForm;
-    type Response = String;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/transfer/setUploadLimit".into()
-    }
-    fn form(&self) -> Option<&Self::Form> {
-        Some(&self.f)
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::POST
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.text().await?)
-    }
-}
-
-/// # `/api/v2/transfer/banPeers`
-pub struct BanPeers {
-    pub f: types::BanPeersForm,
-}
-
-#[async_trait]
-impl Endpoint for BanPeers {
-    type Query = ();
-    type Form = types::BanPeersForm;
-    type Response = String;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/transfer/banPeers".into()
-    }
-    fn form(&self) -> Option<&Self::Form> {
-        Some(&self.f)
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::POST
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.text().await?)
-    }
-}
+use super::Endpoint;
 
 /// # `/api/v2/torrents/info`
-pub struct TorrentsInfo {
-    pub q: types::TorrentsInfoQuery,
+pub struct Info {
+    pub q: types::torrents::InfoQuery,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsInfo {
-    type Query = types::TorrentsInfoQuery;
+impl Endpoint for Info {
+    type Query = types::torrents::InfoQuery;
     type Form = ();
-    type Response = types::TorrentsInfoResponse;
+    type Response = types::torrents::InfoResponse;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/info".into()
     }
@@ -656,20 +32,20 @@ impl Endpoint for TorrentsInfo {
         }
     }
     async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.json::<types::TorrentsInfoResponse>().await?)
+        Ok(res.json::<types::torrents::InfoResponse>().await?)
     }
 }
 
 /// # `/api/v2/torrents/properties`
-pub struct TorrentsProperties {
-    pub q: types::TorrentsPropertiesQuery,
+pub struct Properties {
+    pub q: types::torrents::PropertiesQuery,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsProperties {
-    type Query = types::TorrentsPropertiesQuery;
+impl Endpoint for Properties {
+    type Query = types::torrents::PropertiesQuery;
     type Form = ();
-    type Response = types::TorrentsPropertiesResponse;
+    type Response = types::torrents::PropertiesResponse;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/properties".into()
     }
@@ -690,20 +66,20 @@ impl Endpoint for TorrentsProperties {
         }
     }
     async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.json::<types::TorrentsPropertiesResponse>().await?)
+        Ok(res.json::<types::torrents::PropertiesResponse>().await?)
     }
 }
 
 /// # `/api/v2/torrents/trackers`
-pub struct TorrentsTrackers {
-    pub q: types::TorrentsTrackersQuery,
+pub struct Trackers {
+    pub q: types::torrents::TrackersQuery,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsTrackers {
-    type Query = types::TorrentsTrackersQuery;
+impl Endpoint for Trackers {
+    type Query = types::torrents::TrackersQuery;
     type Form = ();
-    type Response = types::TorrentsTrackersResponse;
+    type Response = types::torrents::TrackersResponse;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/trackers".into()
     }
@@ -724,20 +100,20 @@ impl Endpoint for TorrentsTrackers {
         }
     }
     async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.json::<types::TorrentsTrackersResponse>().await?)
+        Ok(res.json::<types::torrents::TrackersResponse>().await?)
     }
 }
 
 /// # `/api/v2/torrents/webseeds`
-pub struct TorrentsWebseeds {
-    pub q: types::TorrentsWebseedsQuery,
+pub struct Webseeds {
+    pub q: types::torrents::WebseedsQuery,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsWebseeds {
-    type Query = types::TorrentsWebseedsQuery;
+impl Endpoint for Webseeds {
+    type Query = types::torrents::WebseedsQuery;
     type Form = ();
-    type Response = types::TorrentsWebseedsResponse;
+    type Response = types::torrents::WebseedsResponse;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/webseeds".into()
     }
@@ -758,20 +134,20 @@ impl Endpoint for TorrentsWebseeds {
         }
     }
     async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.json::<types::TorrentsWebseedsResponse>().await?)
+        Ok(res.json::<types::torrents::WebseedsResponse>().await?)
     }
 }
 
 /// # `/api/v2/torrents/files`
-pub struct TorrentsFiles {
-    pub q: types::TorrentsFilesQuery,
+pub struct Files {
+    pub q: types::torrents::FilesQuery,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsFiles {
-    type Query = types::TorrentsFilesQuery;
+impl Endpoint for Files {
+    type Query = types::torrents::FilesQuery;
     type Form = ();
-    type Response = types::TorrentsFilesResponse;
+    type Response = types::torrents::FilesResponse;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/files".into()
     }
@@ -792,20 +168,20 @@ impl Endpoint for TorrentsFiles {
         }
     }
     async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.json::<types::TorrentsFilesResponse>().await?)
+        Ok(res.json::<types::torrents::FilesResponse>().await?)
     }
 }
 
 /// # `/api/v2/torrents/pieceStates`
-pub struct TorrentsPieceStates {
-    pub q: types::TorrentsPieceStatesQuery,
+pub struct PieceStates {
+    pub q: types::torrents::PieceStatesQuery,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsPieceStates {
-    type Query = types::TorrentsPieceStatesQuery;
+impl Endpoint for PieceStates {
+    type Query = types::torrents::PieceStatesQuery;
     type Form = ();
-    type Response = types::TorrentsPieceStatesResponse;
+    type Response = types::torrents::PieceStatesResponse;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/pieceStates".into()
     }
@@ -826,20 +202,20 @@ impl Endpoint for TorrentsPieceStates {
         }
     }
     async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.json::<types::TorrentsPieceStatesResponse>().await?)
+        Ok(res.json::<types::torrents::PieceStatesResponse>().await?)
     }
 }
 
 /// # `/api/v2/torrents/pieceHashes`
-pub struct TorrentsPieceHashes {
-    pub q: types::TorrentsPieceHashesQuery,
+pub struct PieceHashes {
+    pub q: types::torrents::PieceHashesQuery,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsPieceHashes {
-    type Query = types::TorrentsPieceHashesQuery;
+impl Endpoint for PieceHashes {
+    type Query = types::torrents::PieceHashesQuery;
     type Form = ();
-    type Response = types::TorrentsPieceHashesResponse;
+    type Response = types::torrents::PieceHashesResponse;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/pieceHashes".into()
     }
@@ -860,19 +236,19 @@ impl Endpoint for TorrentsPieceHashes {
         }
     }
     async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.json::<types::TorrentsPieceHashesResponse>().await?)
+        Ok(res.json::<types::torrents::PieceHashesResponse>().await?)
     }
 }
 
 /// # `/api/v2/torrents/pause`
-pub struct TorrentsPause {
-    pub f: types::TorrentsPauseForm,
+pub struct Pause {
+    pub f: types::torrents::PauseForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsPause {
+impl Endpoint for Pause {
     type Query = ();
-    type Form = types::TorrentsPauseForm;
+    type Form = types::torrents::PauseForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/pause".into()
@@ -896,14 +272,14 @@ impl Endpoint for TorrentsPause {
 }
 
 /// # `/api/v2/torrents/resume`
-pub struct TorrentsResume {
-    pub f: types::TorrentsResumeForm,
+pub struct Resume {
+    pub f: types::torrents::ResumeForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsResume {
+impl Endpoint for Resume {
     type Query = ();
-    type Form = types::TorrentsResumeForm;
+    type Form = types::torrents::ResumeForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/resume".into()
@@ -927,14 +303,14 @@ impl Endpoint for TorrentsResume {
 }
 
 /// # `/api/v2/torrents/delete`
-pub struct TorrentsDelete {
-    pub f: types::TorrentsDeleteForm,
+pub struct Delete {
+    pub f: types::torrents::DeleteForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsDelete {
+impl Endpoint for Delete {
     type Query = ();
-    type Form = types::TorrentsDeleteForm;
+    type Form = types::torrents::DeleteForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/delete".into()
@@ -958,14 +334,14 @@ impl Endpoint for TorrentsDelete {
 }
 
 /// # `/api/v2/torrents/recheck`
-pub struct TorrentsRecheck {
-    pub f: types::TorrentsRecheckForm,
+pub struct Recheck {
+    pub f: types::torrents::RecheckForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsRecheck {
+impl Endpoint for Recheck {
     type Query = ();
-    type Form = types::TorrentsRecheckForm;
+    type Form = types::torrents::RecheckForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/recheck".into()
@@ -989,14 +365,14 @@ impl Endpoint for TorrentsRecheck {
 }
 
 /// # `/api/v2/torrents/reannounce`
-pub struct TorrentsReannounce {
-    pub f: types::TorrentsReannounceForm,
+pub struct Reannounce {
+    pub f: types::torrents::ReannounceForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsReannounce {
+impl Endpoint for Reannounce {
     type Query = ();
-    type Form = types::TorrentsReannounceForm;
+    type Form = types::torrents::ReannounceForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/reannounce".into()
@@ -1020,12 +396,12 @@ impl Endpoint for TorrentsReannounce {
 }
 
 /// # `/api/v2/torrents/add`
-pub struct TorrentsAdd {
-    pub mp: types::TorrentsAddMultipart,
+pub struct Add {
+    pub mp: types::torrents::AddMultipart,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsAdd {
+impl Endpoint for Add {
     type Query = ();
     type Form = ();
     type Response = String;
@@ -1057,14 +433,14 @@ impl Endpoint for TorrentsAdd {
 }
 
 /// # `/api/v2/torrents/addTrackers`
-pub struct TorrentsAddTrackers {
-    pub f: types::TorrentsAddTrackersForm,
+pub struct AddTrackers {
+    pub f: types::torrents::AddTrackersForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsAddTrackers {
+impl Endpoint for AddTrackers {
     type Query = ();
-    type Form = types::TorrentsAddTrackersForm;
+    type Form = types::torrents::AddTrackersForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/addTrackers".into()
@@ -1091,14 +467,14 @@ impl Endpoint for TorrentsAddTrackers {
 }
 
 /// # `/api/v2/torrents/editTracker`
-pub struct TorrentsEditTracker {
-    pub f: types::TorrentsEditTrackerForm,
+pub struct EditTracker {
+    pub f: types::torrents::EditTrackerForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsEditTracker {
+impl Endpoint for EditTracker {
     type Query = ();
-    type Form = types::TorrentsEditTrackerForm;
+    type Form = types::torrents::EditTrackerForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/editTracker".into()
@@ -1133,14 +509,14 @@ impl Endpoint for TorrentsEditTracker {
 }
 
 /// # `/api/v2/torrents/removeTrackers`
-pub struct TorrentsRemoveTrackers {
-    pub f: types::TorrentsRemoveTrackersForm,
+pub struct RemoveTrackers {
+    pub f: types::torrents::RemoveTrackersForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsRemoveTrackers {
+impl Endpoint for RemoveTrackers {
     type Query = ();
-    type Form = types::TorrentsRemoveTrackersForm;
+    type Form = types::torrents::RemoveTrackersForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/removeTrackers".into()
@@ -1171,14 +547,14 @@ impl Endpoint for TorrentsRemoveTrackers {
 }
 
 /// # `/api/v2/torrents/addPeers`
-pub struct TorrentsAddPeers {
-    pub f: types::TorrentsAddPeersForm,
+pub struct AddPeers {
+    pub f: types::torrents::AddPeersForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsAddPeers {
+impl Endpoint for AddPeers {
     type Query = ();
-    type Form = types::TorrentsAddPeersForm;
+    type Form = types::torrents::AddPeersForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/addPeers".into()
@@ -1210,14 +586,14 @@ impl Endpoint for TorrentsAddPeers {
 }
 
 /// # `/api/v2/torrents/increasePrio`
-pub struct TorrentsIncreasePrio {
-    pub f: types::TorrentsIncreasePrioForm,
+pub struct IncreasePrio {
+    pub f: types::torrents::IncreasePrioForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsIncreasePrio {
+impl Endpoint for IncreasePrio {
     type Query = ();
-    type Form = types::TorrentsIncreasePrioForm;
+    type Form = types::torrents::IncreasePrioForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/increasePrio".into()
@@ -1247,14 +623,14 @@ impl Endpoint for TorrentsIncreasePrio {
 }
 
 /// # `/api/v2/torrents/decreasePrio`
-pub struct TorrentsDecreasePrio {
-    pub f: types::TorrentsDecreasePrioForm,
+pub struct DecreasePrio {
+    pub f: types::torrents::DecreasePrioForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsDecreasePrio {
+impl Endpoint for DecreasePrio {
     type Query = ();
-    type Form = types::TorrentsDecreasePrioForm;
+    type Form = types::torrents::DecreasePrioForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/decreasePrio".into()
@@ -1284,14 +660,14 @@ impl Endpoint for TorrentsDecreasePrio {
 }
 
 /// # `/api/v2/torrents/topPrio`
-pub struct TorrentsTopPrio {
-    pub f: types::TorrentsTopPrioForm,
+pub struct TopPrio {
+    pub f: types::torrents::TopPrioForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsTopPrio {
+impl Endpoint for TopPrio {
     type Query = ();
-    type Form = types::TorrentsTopPrioForm;
+    type Form = types::torrents::TopPrioForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/topPrio".into()
@@ -1321,14 +697,14 @@ impl Endpoint for TorrentsTopPrio {
 }
 
 /// # `/api/v2/torrents/bottomPrio`
-pub struct TorrentsBottomPrio {
-    pub f: types::TorrentsBottomPrioForm,
+pub struct BottomPrio {
+    pub f: types::torrents::BottomPrioForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsBottomPrio {
+impl Endpoint for BottomPrio {
     type Query = ();
-    type Form = types::TorrentsBottomPrioForm;
+    type Form = types::torrents::BottomPrioForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/bottomPrio".into()
@@ -1361,15 +737,15 @@ impl Endpoint for TorrentsBottomPrio {
 // TODO: Implement
 
 /// # `/api/v2/torrents/downloadLimit`
-pub struct TorrentsDownloadLimit {
-    pub f: types::TorrentsDownloadLimitForm,
+pub struct DownloadLimit {
+    pub f: types::torrents::DownloadLimitForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsDownloadLimit {
+impl Endpoint for DownloadLimit {
     type Query = ();
-    type Form = types::TorrentsDownloadLimitForm;
-    type Response = types::TorrentsDownloadLimitResponse;
+    type Form = types::torrents::DownloadLimitForm;
+    type Response = types::torrents::DownloadLimitResponse;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/downloadLimit".into()
     }
@@ -1390,19 +766,19 @@ impl Endpoint for TorrentsDownloadLimit {
         }
     }
     async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.json::<types::TorrentsDownloadLimitResponse>().await?)
+        Ok(res.json::<types::torrents::DownloadLimitResponse>().await?)
     }
 }
 
 /// # `/api/v2/torrents/setDownloadLimit`
-pub struct TorrentsSetDownloadLimit {
-    pub f: types::TorrentsSetDownloadLimitForm,
+pub struct SetDownloadLimit {
+    pub f: types::torrents::SetDownloadLimitForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsSetDownloadLimit {
+impl Endpoint for SetDownloadLimit {
     type Query = ();
-    type Form = types::TorrentsSetDownloadLimitForm;
+    type Form = types::torrents::SetDownloadLimitForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/setDownloadLimit".into()
@@ -1429,14 +805,14 @@ impl Endpoint for TorrentsSetDownloadLimit {
 }
 
 /// # `/api/v2/torrents/setShareLimits`
-pub struct TorrentsSetShareLimits {
-    pub f: types::TorrentsSetShareLimitsForm,
+pub struct SetShareLimits {
+    pub f: types::torrents::SetShareLimitsForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsSetShareLimits {
+impl Endpoint for SetShareLimits {
     type Query = ();
-    type Form = types::TorrentsSetShareLimitsForm;
+    type Form = types::torrents::SetShareLimitsForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/setShareLimits".into()
@@ -1463,15 +839,15 @@ impl Endpoint for TorrentsSetShareLimits {
 }
 
 /// # `/api/v2/torrents/uploadLimit`
-pub struct TorrentsUploadLimit {
-    pub f: types::TorrentsUploadLimitForm,
+pub struct UploadLimit {
+    pub f: types::torrents::UploadLimitForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsUploadLimit {
+impl Endpoint for UploadLimit {
     type Query = ();
-    type Form = types::TorrentsUploadLimitForm;
-    type Response = types::TorrentsUploadLimitResponse;
+    type Form = types::torrents::UploadLimitForm;
+    type Response = types::torrents::UploadLimitResponse;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/uploadLimit".into()
     }
@@ -1492,19 +868,19 @@ impl Endpoint for TorrentsUploadLimit {
         }
     }
     async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.json::<types::TorrentsUploadLimitResponse>().await?)
+        Ok(res.json::<types::torrents::UploadLimitResponse>().await?)
     }
 }
 
 /// # `/api/v2/torrents/setUploadLimit`
-pub struct TorrentsSetUploadLimit {
-    pub f: types::TorrentsSetUploadLimitForm,
+pub struct SetUploadLimit {
+    pub f: types::torrents::SetUploadLimitForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsSetUploadLimit {
+impl Endpoint for SetUploadLimit {
     type Query = ();
-    type Form = types::TorrentsSetUploadLimitForm;
+    type Form = types::torrents::SetUploadLimitForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/setUploadLimit".into()
@@ -1531,14 +907,14 @@ impl Endpoint for TorrentsSetUploadLimit {
 }
 
 /// # `/api/v2/torrents/setLocation`
-pub struct TorrentsSetLocation {
-    pub f: types::TorrentsSetLocationForm,
+pub struct SetLocation {
+    pub f: types::torrents::SetLocationForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsSetLocation {
+impl Endpoint for SetLocation {
     type Query = ();
-    type Form = types::TorrentsSetLocationForm;
+    type Form = types::torrents::SetLocationForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/setLocation".into()
@@ -1569,14 +945,14 @@ impl Endpoint for TorrentsSetLocation {
 }
 
 /// # `/api/v2/torrents/rename`
-pub struct TorrentsRename {
-    pub f: types::TorrentsRenameForm,
+pub struct Rename {
+    pub f: types::torrents::RenameForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsRename {
+impl Endpoint for Rename {
     type Query = ();
-    type Form = types::TorrentsRenameForm;
+    type Form = types::torrents::RenameForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/rename".into()
@@ -1604,14 +980,14 @@ impl Endpoint for TorrentsRename {
 }
 
 /// # `/api/v2/torrents/setCategory`
-pub struct TorrentsSetCategory {
-    pub f: types::TorrentsSetCategoryForm,
+pub struct SetCategory {
+    pub f: types::torrents::SetCategoryForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsSetCategory {
+impl Endpoint for SetCategory {
     type Query = ();
-    type Form = types::TorrentsSetCategoryForm;
+    type Form = types::torrents::SetCategoryForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/setCategory".into()
@@ -1641,13 +1017,13 @@ impl Endpoint for TorrentsSetCategory {
 }
 
 /// # `/api/v2/torrents/categories`
-pub struct TorrentsCategories;
+pub struct Categories;
 
 #[async_trait]
-impl Endpoint for TorrentsCategories {
+impl Endpoint for Categories {
     type Query = ();
     type Form = ();
-    type Response = types::TorrentsCategoriesResponse;
+    type Response = types::torrents::CategoriesResponse;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/categories".into()
     }
@@ -1662,19 +1038,19 @@ impl Endpoint for TorrentsCategories {
         }
     }
     async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.json::<types::TorrentsCategoriesResponse>().await?)
+        Ok(res.json::<types::torrents::CategoriesResponse>().await?)
     }
 }
 
 /// # `/api/v2/torrents/createCategory`
-pub struct TorrentsCreateCategory {
-    pub f: types::TorrentsCreateCategoryForm,
+pub struct CreateCategory {
+    pub f: types::torrents::CreateCategoryForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsCreateCategory {
+impl Endpoint for CreateCategory {
     type Query = ();
-    type Form = types::TorrentsCreateCategoryForm;
+    type Form = types::torrents::CreateCategoryForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/createCategory".into()
@@ -1702,14 +1078,14 @@ impl Endpoint for TorrentsCreateCategory {
 }
 
 /// # `/api/v2/torrents/editCategory`
-pub struct TorrentsEditCategory {
-    pub f: types::TorrentsEditCategoryForm,
+pub struct EditCategory {
+    pub f: types::torrents::EditCategoryForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsEditCategory {
+impl Endpoint for EditCategory {
     type Query = ();
-    type Form = types::TorrentsEditCategoryForm;
+    type Form = types::torrents::EditCategoryForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/editCategory".into()
@@ -1737,14 +1113,14 @@ impl Endpoint for TorrentsEditCategory {
 }
 
 /// # `/api/v2/torrents/removeCategories`
-pub struct TorrentsRemoveCategories {
-    pub f: types::TorrentsRemoveCategoriesForm,
+pub struct RemoveCategories {
+    pub f: types::torrents::RemoveCategoriesForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsRemoveCategories {
+impl Endpoint for RemoveCategories {
     type Query = ();
-    type Form = types::TorrentsRemoveCategoriesForm;
+    type Form = types::torrents::RemoveCategoriesForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/removeCategories".into()
@@ -1768,14 +1144,14 @@ impl Endpoint for TorrentsRemoveCategories {
 }
 
 /// # `/api/v2/torrents/addTags`
-pub struct TorrentsAddTags {
-    pub f: types::TorrentsAddTagsForm,
+pub struct AddTags {
+    pub f: types::torrents::AddTagsForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsAddTags {
+impl Endpoint for AddTags {
     type Query = ();
-    type Form = types::TorrentsAddTagsForm;
+    type Form = types::torrents::AddTagsForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/addTags".into()
@@ -1799,14 +1175,14 @@ impl Endpoint for TorrentsAddTags {
 }
 
 /// # `/api/v2/torrents/removeTags`
-pub struct TorrentsRemoveTags {
-    pub f: types::TorrentsRemoveTagsForm,
+pub struct RemoveTags {
+    pub f: types::torrents::RemoveTagsForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsRemoveTags {
+impl Endpoint for RemoveTags {
     type Query = ();
-    type Form = types::TorrentsRemoveTagsForm;
+    type Form = types::torrents::RemoveTagsForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/removeTags".into()
@@ -1830,13 +1206,13 @@ impl Endpoint for TorrentsRemoveTags {
 }
 
 /// # `/api/v2/torrents/tags`
-pub struct TorrentsTags;
+pub struct Tags;
 
 #[async_trait]
-impl Endpoint for TorrentsTags {
+impl Endpoint for Tags {
     type Query = ();
     type Form = ();
-    type Response = types::TorrentsTagsResponse;
+    type Response = types::torrents::TagsResponse;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/tags".into()
     }
@@ -1851,19 +1227,19 @@ impl Endpoint for TorrentsTags {
         }
     }
     async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.json::<types::TorrentsTagsResponse>().await?)
+        Ok(res.json::<types::torrents::TagsResponse>().await?)
     }
 }
 
 /// # `/api/v2/torrents/createTags`
-pub struct TorrentsCreateTags {
-    pub f: types::TorrentsCreateTagsForm,
+pub struct CreateTags {
+    pub f: types::torrents::CreateTagsForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsCreateTags {
+impl Endpoint for CreateTags {
     type Query = ();
-    type Form = types::TorrentsCreateTagsForm;
+    type Form = types::torrents::CreateTagsForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/createTags".into()
@@ -1887,14 +1263,14 @@ impl Endpoint for TorrentsCreateTags {
 }
 
 /// # `/api/v2/torrents/deleteTags`
-pub struct TorrentsDeleteTags {
-    pub f: types::TorrentsDeleteTagsForm,
+pub struct DeleteTags {
+    pub f: types::torrents::DeleteTagsForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsDeleteTags {
+impl Endpoint for DeleteTags {
     type Query = ();
-    type Form = types::TorrentsDeleteTagsForm;
+    type Form = types::torrents::DeleteTagsForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/deleteTags".into()
@@ -1918,14 +1294,14 @@ impl Endpoint for TorrentsDeleteTags {
 }
 
 /// # `/api/v2/torrents/setAutoManagement`
-pub struct TorrentsSetAutoManagement {
-    pub f: types::TorrentsSetAutoManagementForm,
+pub struct SetAutoManagement {
+    pub f: types::torrents::SetAutoManagementForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsSetAutoManagement {
+impl Endpoint for SetAutoManagement {
     type Query = ();
-    type Form = types::TorrentsSetAutoManagementForm;
+    type Form = types::torrents::SetAutoManagementForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/setAutoManagement".into()
@@ -1949,14 +1325,14 @@ impl Endpoint for TorrentsSetAutoManagement {
 }
 
 /// # `/api/v2/torrents/toggleSequentialDownload`
-pub struct TorrentsToggleSequentialDownload {
-    pub f: types::TorrentsToggleSequentialDownloadForm,
+pub struct ToggleSequentialDownload {
+    pub f: types::torrents::ToggleSequentialDownloadForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsToggleSequentialDownload {
+impl Endpoint for ToggleSequentialDownload {
     type Query = ();
-    type Form = types::TorrentsToggleSequentialDownloadForm;
+    type Form = types::torrents::ToggleSequentialDownloadForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/toggleSequentialDownload".into()
@@ -1980,14 +1356,14 @@ impl Endpoint for TorrentsToggleSequentialDownload {
 }
 
 /// # `/api/v2/torrents/toggleFirstLastPiecePrio`
-pub struct TorrentsToggleFirstLastPiecePrio {
-    pub f: types::TorrentsToggleFirstLastPiecePrioForm,
+pub struct ToggleFirstLastPiecePrio {
+    pub f: types::torrents::ToggleFirstLastPiecePrioForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsToggleFirstLastPiecePrio {
+impl Endpoint for ToggleFirstLastPiecePrio {
     type Query = ();
-    type Form = types::TorrentsToggleFirstLastPiecePrioForm;
+    type Form = types::torrents::ToggleFirstLastPiecePrioForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/toggleFirstLastPiecePrio".into()
@@ -2011,14 +1387,14 @@ impl Endpoint for TorrentsToggleFirstLastPiecePrio {
 }
 
 /// # `/api/v2/torrents/setForceStart`
-pub struct TorrentsSetForceStart {
-    pub f: types::TorrentsSetForceStartForm,
+pub struct SetForceStart {
+    pub f: types::torrents::SetForceStartForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsSetForceStart {
+impl Endpoint for SetForceStart {
     type Query = ();
-    type Form = types::TorrentsSetForceStartForm;
+    type Form = types::torrents::SetForceStartForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/setForceStart".into()
@@ -2042,14 +1418,14 @@ impl Endpoint for TorrentsSetForceStart {
 }
 
 /// # `/api/v2/torrents/setSuperSeeding`
-pub struct TorrentsSetSuperSeeding {
-    pub f: types::TorrentsSetSuperSeedingForm,
+pub struct SetSuperSeeding {
+    pub f: types::torrents::SetSuperSeedingForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsSetSuperSeeding {
+impl Endpoint for SetSuperSeeding {
     type Query = ();
-    type Form = types::TorrentsSetSuperSeedingForm;
+    type Form = types::torrents::SetSuperSeedingForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/setSuperSeeding".into()
@@ -2073,14 +1449,14 @@ impl Endpoint for TorrentsSetSuperSeeding {
 }
 
 /// # `/api/v2/torrents/renameFile`
-pub struct TorrentsRenameFile {
-    pub f: types::TorrentsRenameFileForm,
+pub struct RenameFile {
+    pub f: types::torrents::RenameFileForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsRenameFile {
+impl Endpoint for RenameFile {
     type Query = ();
-    type Form = types::TorrentsRenameFileForm;
+    type Form = types::torrents::RenameFileForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/renameFile".into()
@@ -2110,14 +1486,14 @@ impl Endpoint for TorrentsRenameFile {
 }
 
 /// # `/api/v2/torrents/renameFolder`
-pub struct TorrentsRenameFolder {
-    pub f: types::TorrentsRenameFolderForm,
+pub struct RenameFolder {
+    pub f: types::torrents::RenameFolderForm,
 }
 
 #[async_trait]
-impl Endpoint for TorrentsRenameFolder {
+impl Endpoint for RenameFolder {
     type Query = ();
-    type Form = types::TorrentsRenameFolderForm;
+    type Form = types::torrents::RenameFolderForm;
     type Response = String;
     fn relative_path(&self) -> Cow<str> {
         "/api/v2/torrents/renameFolder".into()
@@ -2138,173 +1514,6 @@ impl Endpoint for TorrentsRenameFolder {
             StatusCode::CONFLICT => Some(ClientError::Conflict(
                 "Invalid new_path or old_path, or new_path already in use".into(),
             )),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.text().await?)
-    }
-}
-
-/// # `/api/v2/search/start`
-pub struct SearchStart {
-    pub f: types::SearchStartForm,
-}
-
-#[async_trait]
-impl Endpoint for SearchStart {
-    type Query = ();
-    type Form = types::SearchStartForm;
-    type Response = types::SearchStartResponse;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/search/start".into()
-    }
-    fn form(&self) -> Option<&Self::Form> {
-        Some(&self.f)
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::POST
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            StatusCode::CONFLICT => Some(ClientError::Conflict(
-                "User has reached the limit of max Running searches (currently set to 5)".into(),
-            )),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.json::<types::SearchStartResponse>().await?)
-    }
-}
-
-/// # `/api/v2/search/stop`
-pub struct SearchStop {
-    pub f: types::SearchStopForm,
-}
-
-#[async_trait]
-impl Endpoint for SearchStop {
-    type Query = ();
-    type Form = types::SearchStopForm;
-    type Response = String;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/search/stop".into()
-    }
-    fn form(&self) -> Option<&Self::Form> {
-        Some(&self.f)
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::POST
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            StatusCode::NOT_FOUND => Some(ClientError::SearchJobNotFound { id: self.f.id }),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.text().await?)
-    }
-}
-
-/// # `/api/v2/search/status`
-pub struct SearchStatus {
-    pub q: types::SearchStatusQuery,
-}
-
-#[async_trait]
-impl Endpoint for SearchStatus {
-    type Query = types::SearchStatusQuery;
-    type Form = ();
-    type Response = types::SearchStatusResponse;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/search/status".into()
-    }
-    fn query(&self) -> Option<&Self::Query> {
-        Some(&self.q)
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::GET
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            StatusCode::NOT_FOUND => Some(ClientError::SearchJobNotFound {
-                id: self.q.id.unwrap(),
-            }),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.json::<types::SearchStatusResponse>().await?)
-    }
-}
-
-/// # `/api/v2/search/results`
-pub struct SearchResults {
-    pub q: types::SearchResultsQuery,
-}
-
-#[async_trait]
-impl Endpoint for SearchResults {
-    type Query = types::SearchResultsQuery;
-    type Form = ();
-    type Response = types::SearchResultsResponse;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/search/results".into()
-    }
-    fn query(&self) -> Option<&Self::Query> {
-        Some(&self.q)
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::GET
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            StatusCode::NOT_FOUND => Some(ClientError::SearchJobNotFound { id: self.q.id }),
-            StatusCode::CONFLICT => Some(ClientError::Conflict(
-                "Offset is too large or too small".into(),
-            )),
-            _ => Some(ClientError::Unknown),
-        }
-    }
-    async fn de_response(&self, res: reqwest::Response) -> Result<Self::Response, ClientError> {
-        Ok(res.json::<types::SearchResultsResponse>().await?)
-    }
-}
-
-/// # `/api/v2/search/delete`
-pub struct SearchDelete {
-    pub f: types::SearchDeleteForm,
-}
-
-#[async_trait]
-impl Endpoint for SearchDelete {
-    type Query = ();
-    type Form = types::SearchDeleteForm;
-    type Response = String;
-    fn relative_path(&self) -> Cow<str> {
-        "/api/v2/search/delete".into()
-    }
-    fn form(&self) -> Option<&Self::Form> {
-        Some(&self.f)
-    }
-    fn method(&self) -> reqwest::Method {
-        Method::POST
-    }
-    fn check_status(&self, status: reqwest::StatusCode) -> Option<ClientError> {
-        match status {
-            StatusCode::OK => None,
-            StatusCode::FORBIDDEN => Some(ClientError::NeedAuthentication),
-            StatusCode::NOT_FOUND => Some(ClientError::SearchJobNotFound { id: self.f.id }),
             _ => Some(ClientError::Unknown),
         }
     }
